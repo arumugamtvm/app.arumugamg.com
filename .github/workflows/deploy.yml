@@ -63,7 +63,9 @@ jobs:
           # Ensure Vite sets the correct base path for GitHub Pages
           VITE_BASE_URL: ${{ secrets.VITE_BASE_URL || '/' }}
 
-      - uses: actions/configure-pages@v4
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
