@@ -869,6 +869,153 @@ h1, h2, h3 {
   transform: scale(1.12);
 }
 
+/* ── Login / Auth Screen Styles ───────────────────────────────────────── */
+.login-panel-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+  padding: 40px;
+}
+
+.login-header {
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lock-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: var(--clr-accent);
+  margin-bottom: 16px;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+.login-title {
+  font-size: 1.45rem;
+  margin-bottom: 4px;
+}
+
+.login-subtitle {
+  color: var(--clr-text-dim);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-group-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.input-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--clr-text);
+  letter-spacing: 0.01em;
+}
+
+.login-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--clr-border);
+  border-radius: 8px;
+  padding: 10px 14px 10px 38px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--clr-heading);
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.login-input:focus {
+  border-color: var(--clr-accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.login-input.code-input {
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  letter-spacing: 0.4em;
+  text-align: center;
+  padding-left: 20px; /* Center-align letters */
+}
+
+.login-submit-btn {
+  width: 100%;
+  padding: 11px;
+  font-size: 0.9rem;
+}
+
+.login-action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.success-banner {
+  background: var(--clr-success);
+  border: 1px solid var(--clr-success-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--clr-success-text);
+  font-size: 0.82rem;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+/* ── Dashboard User Header ── */
+.dashboard-user-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--clr-border);
+  padding-bottom: 12px;
+}
+
+.user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--clr-border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  color: var(--clr-heading);
+  font-weight: 500;
+}
+
+.user-badge span {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
 /* ── Responsive breakpoints ────────────────────────────────────────────── */
 @media (max-width: 620px) {
   .glass-card {
@@ -905,5 +1052,8 @@ h1, h2, h3 {
   }
   .token-input-row {
     flex-direction: column;
+  }
+  .login-card {
+    padding: 30px 18px;
   }
 }
