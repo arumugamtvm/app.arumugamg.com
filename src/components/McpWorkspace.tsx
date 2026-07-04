@@ -128,7 +128,15 @@ export const McpWorkspace: React.FC<McpWorkspaceProps> = ({ onBackToDashboard })
                 <span className="tool-name">create_todo</span>
                 <span className="tool-type writable">Write-Only</span>
               </div>
-              <p className="tool-desc">Appends a new task with customizable title and priority levels (low/normal/high).</p>
+              <p className="tool-desc">Appends a new task with customizable title, optional description, and priority levels (low/normal/high).</p>
+            </div>
+
+            <div className="tool-item">
+              <div className="tool-meta">
+                <span className="tool-name">update_todo</span>
+                <span className="tool-type writable">Write-Only</span>
+              </div>
+              <p className="tool-desc">Modifies properties (title, description, priority, or status) of a todo by its numeric ID.</p>
             </div>
 
             <div className="tool-item">

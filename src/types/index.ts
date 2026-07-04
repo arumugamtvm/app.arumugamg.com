@@ -1,6 +1,7 @@
 export interface Todo {
   id: number;
   title: string;
+  description: string;
   priority: "low" | "normal" | "high";
   status: "open" | "done";
   created_at: string;

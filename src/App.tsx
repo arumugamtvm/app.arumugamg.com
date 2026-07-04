@@ -13,6 +13,7 @@ import {
   createTodo as createTodoApi,
   completeTodo as completeTodoApi,
   deleteTodo as deleteTodoApi,
+  updateTodo as updateTodoApi,
   fetchNotes,
   getJwtToken,
   decodeJwt,
@@ -124,6 +125,19 @@ function App() {
       await loadTodos();
     } catch (e) {
       setError((e as Error).message || "Failed to delete task.");
+    }
+  };
+
+  const handleUpdateTodo = async (
+    id: number,
+    fields: { title?: string; priority?: "low" | "normal" | "high"; description?: string }
+  ) => {
+    setError(null);
+    try {
+      await updateTodoApi(id, fields);
+      await loadTodos();
+    } catch (e) {
+      setError((e as Error).message || "Failed to update task.");
     }
   };
 
@@ -280,6 +294,7 @@ function App() {
               todos={todos}
               onToggle={handleToggleTodo}
               onDelete={handleDeleteTodo}
+              onUpdate={handleUpdateTodo}
               loading={loading}
             />
           </GlassCard>

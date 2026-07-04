@@ -89,11 +89,11 @@ export async function fetchTodos(status?: "open" | "done" | ""): Promise<Todo[]>
 }
 
 /** Create a new todo */
-export async function createTodo(title: string, priority: "low" | "normal" | "high"): Promise<Todo> {
+export async function createTodo(title: string, priority: "low" | "normal" | "high", description?: string): Promise<Todo> {
   const response = await fetch(`${API_BASE}/todos`, {
     method: "POST",
     headers: getHeaders(),
-    body: JSON.stringify({ title, priority }),
+    body: JSON.stringify({ title, priority, description }),
   });
   
   if (response.status === 401) {
@@ -112,6 +112,29 @@ export async function completeTodo(id: number): Promise<Todo> {
   const response = await fetch(`${API_BASE}/todos/${id}`, {
     method: "PATCH",
     headers: getHeaders(),
+    body: JSON.stringify({ status: "done" }),
+  });
+  
+  if (response.status === 401) {
+    throw new Error("UNAUTHORIZED");
+  }
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${response.status}`);
+  }
+  
+  return response.json() as Promise<Todo>;
+}
+
+/** Update title, description, priority, or status of a todo */
+export async function updateTodo(
+  id: number,
+  fields: { title?: string; priority?: "low" | "normal" | "high"; description?: string; status?: "open" | "done" }
+): Promise<Todo> {
+  const response = await fetch(`${API_BASE}/todos/${id}`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify(fields),
   });
   
   if (response.status === 401) {

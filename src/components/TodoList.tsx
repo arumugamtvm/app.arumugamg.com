@@ -7,6 +7,7 @@ interface TodoListProps {
   todos: Todo[];
   onToggle: (id: number) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
+  onUpdate: (id: number, fields: { title?: string; priority?: "low" | "normal" | "high"; description?: string }) => Promise<void>;
   loading: boolean;
 }
 
@@ -14,6 +15,7 @@ export const TodoList: React.FC<TodoListProps> = ({
   todos,
   onToggle,
   onDelete,
+  onUpdate,
   loading,
 }) => {
   const [filter, setFilter] = useState<"all" | "open" | "done">("all");
@@ -30,9 +32,11 @@ export const TodoList: React.FC<TodoListProps> = ({
       (filter === "open" && todo.status === "open") ||
       (filter === "done" && todo.status === "done");
       
-    const matchesSearch = todo.title.toLowerCase().includes(search.toLowerCase());
+    // Include description in search filter as well
+    const titleMatch = todo.title.toLowerCase().includes(search.toLowerCase());
+    const descMatch = todo.description ? todo.description.toLowerCase().includes(search.toLowerCase()) : false;
     
-    return matchesFilter && matchesSearch;
+    return matchesFilter && (titleMatch || descMatch);
   });
 
   return (
@@ -109,6 +113,7 @@ export const TodoList: React.FC<TodoListProps> = ({
               todo={todo}
               onToggle={onToggle}
               onDelete={onDelete}
+              onUpdate={onUpdate}
             />
           ))}
         </ul>
