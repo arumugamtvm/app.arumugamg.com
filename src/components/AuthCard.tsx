@@ -7,7 +7,7 @@ import {
   isTokenExpired,
 } from "../api/todoApi";
 import type { DecodedToken } from "../types";
-import { KeyRound, ShieldCheck, ShieldAlert, LogOut, ExternalLink } from "lucide-react";
+import { KeyRound, ShieldCheck, ShieldAlert, LogOut } from "lucide-react";
 
 interface AuthCardProps {
   onTokenChange: () => void;
@@ -93,18 +93,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onTokenChange }) => {
           {!isAuthenticated && (
             <div className="auth-alert-message">
               <p>
-                Todo CRUD actions are secured via JSON Web Tokens. Sign in via your
-                Auth Server to get a valid token.
+                Session is unauthenticated. Please sign in using the login screen.
               </p>
-              <a
-                href="https://mcp.arumugamg.com/oauth/authorize"
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-accent btn-sm auth-login-link"
-              >
-                <span>Login on Auth Server</span>
-                <ExternalLink size={14} />
-              </a>
             </div>
           )}
 
