@@ -1,4 +1,4 @@
-import type { Todo, ApiStatus, DecodedToken } from "../types";
+import type { Todo, ApiStatus, DecodedToken, Note } from "../types";
 
 const API_BASE = "https://api.arumugamg.com";
 
@@ -128,6 +128,78 @@ export async function completeTodo(id: number): Promise<Todo> {
 /** Delete a todo */
 export async function deleteTodo(id: number): Promise<void> {
   const response = await fetch(`${API_BASE}/todos/${id}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
+  
+  if (response.status === 401) {
+    throw new Error("UNAUTHORIZED");
+  }
+  if (!response.ok && response.status !== 204) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${response.status}`);
+  }
+}
+
+/** Fetch all notes */
+export async function fetchNotes(): Promise<Note[]> {
+  const response = await fetch(`${API_BASE}/notes`, {
+    method: "GET",
+    headers: getHeaders(),
+  });
+  
+  if (response.status === 401) {
+    throw new Error("UNAUTHORIZED");
+  }
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${response.status}`);
+  }
+  
+  return response.json() as Promise<Note[]>;
+}
+
+/** Create a new note */
+export async function createNote(title: string, content: string): Promise<Note> {
+  const response = await fetch(`${API_BASE}/notes`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ title, content }),
+  });
+  
+  if (response.status === 401) {
+    throw new Error("UNAUTHORIZED");
+  }
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${response.status}`);
+  }
+  
+  return response.json() as Promise<Note>;
+}
+
+/** Update a note */
+export async function updateNote(id: number, title: string, content: string): Promise<Note> {
+  const response = await fetch(`${API_BASE}/notes/${id}`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify({ title, content }),
+  });
+  
+  if (response.status === 401) {
+    throw new Error("UNAUTHORIZED");
+  }
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${response.status}`);
+  }
+  
+  return response.json() as Promise<Note>;
+}
+
+/** Delete a note */
+export async function deleteNote(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/notes/${id}`, {
     method: "DELETE",
     headers: getHeaders(),
   });

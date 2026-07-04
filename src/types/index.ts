@@ -17,3 +17,11 @@ export interface DecodedToken {
   iat?: number;
   [key: string]: unknown;
 }
+
+export interface Note {
+  id: number;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}

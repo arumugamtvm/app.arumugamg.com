@@ -5,18 +5,21 @@ import { AuthCard } from "./components/AuthCard";
 import { AddTodoForm } from "./components/AddTodoForm";
 import { TodoList } from "./components/TodoList";
 import { LoginPanel } from "./components/LoginPanel";
+import { NotesWorkspace } from "./components/NotesWorkspace";
+import { McpWorkspace } from "./components/McpWorkspace";
 import type { Todo } from "./types";
 import {
   fetchTodos as fetchTodosApi,
   createTodo as createTodoApi,
   completeTodo as completeTodoApi,
   deleteTodo as deleteTodoApi,
+  fetchNotes,
   getJwtToken,
   decodeJwt,
   isTokenExpired,
   clearJwtToken,
 } from "./api/todoApi";
-import { CheckSquare, LogOut, User } from "lucide-react";
+import { CheckSquare, LogOut, User, FileText, Cpu, LayoutGrid, ArrowLeft } from "lucide-react";
 import "./App.css";
 
 function App() {
@@ -26,6 +29,13 @@ function App() {
   const [sessionKey, setSessionKey] = useState(0); // Trigger reload of state on login/logout
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+
+  // Dashboard Workspace selection state
+  const [activeWorkspace, setActiveWorkspace] = useState<"dashboard" | "todos" | "notes" | "mcp">("dashboard");
+
+  // Dashboard item metric counts
+  const [openTasksCount, setOpenTasksCount] = useState<number | null>(null);
+  const [notesCount, setNotesCount] = useState<number | null>(null);
 
   useEffect(() => {
     const token = getJwtToken();
@@ -48,6 +58,8 @@ function App() {
     try {
       const data = await fetchTodosApi();
       setTodos(data);
+      // Update open task count metrics
+      setOpenTasksCount(data.filter((t) => t.status === "open").length);
     } catch (e) {
       setTodos([]);
       const errMsg = (e as Error).message;
@@ -62,11 +74,28 @@ function App() {
     }
   }, [isAuthenticated]);
 
+  const loadDashboardMetrics = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const tasks = await fetchTodosApi("open");
+      setOpenTasksCount(tasks.length);
+
+      const notes = await fetchNotes();
+      setNotesCount(notes.length);
+    } catch {
+      // Silently catch metric errors
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (isAuthenticated) {
-      loadTodos();
+      if (activeWorkspace === "todos") {
+        loadTodos();
+      } else if (activeWorkspace === "dashboard") {
+        loadDashboardMetrics();
+      }
     }
-  }, [isAuthenticated, sessionKey, loadTodos]);
+  }, [isAuthenticated, sessionKey, activeWorkspace, loadTodos, loadDashboardMetrics]);
 
   const handleAddTodo = async (title: string, priority: "low" | "normal" | "high") => {
     setError(null);
@@ -100,6 +129,7 @@ function App() {
 
   const handleLogout = () => {
     clearJwtToken();
+    setActiveWorkspace("dashboard");
     setSessionKey((k) => k + 1);
   };
 
@@ -119,63 +149,150 @@ function App() {
 
   return (
     <main className="app-container">
-      {/* ── Dashboard Header ── */}
-      <GlassCard className="hero-card" glow={true} delay="0s">
-        <div className="dashboard-user-row">
-          <div className="user-badge">
-            <User size={14} />
-            <span>{userEmail}</span>
-          </div>
+      {/* ── Dashboard Top User Bar ── */}
+      <div className="dashboard-global-header">
+        <div className="user-badge">
+          <User size={14} />
+          <span>{userEmail}</span>
+        </div>
+        
+        <div className="header-actions">
+          {activeWorkspace !== "dashboard" && (
+            <button className="btn btn-ghost btn-xs" onClick={() => setActiveWorkspace("dashboard")}>
+              <LayoutGrid size={12} />
+              <span>Launcher</span>
+            </button>
+          )}
           
           <button className="btn btn-ghost btn-xs logout-btn" onClick={handleLogout}>
             <LogOut size={12} />
             <span>Sign Out</span>
           </button>
         </div>
+      </div>
 
-        <h1 className="hero-title">arumugamg.com</h1>
-        <p className="hero-subtitle">Secure Gateway · Realtime Todo Management</p>
-        
-        {/* Connection status verify tool */}
-        <StatusCard />
-      </GlassCard>
+      {/* ── Conditionally Render Active Workspace ── */}
+      {activeWorkspace === "dashboard" && (
+        <div className="dashboard-grid-launcher">
+          <GlassCard className="hero-card" glow={true} delay="0s">
+            <h1 className="hero-title">arumugamg.com</h1>
+            <p className="hero-subtitle">Unified Launchpad Gateway Dashboard</p>
+            
+            {/* Connection status verify tool */}
+            <StatusCard />
+          </GlassCard>
 
-      {/* ── Advanced Session Configuration ── */}
-      <AuthCard onTokenChange={() => setSessionKey((k) => k + 1)} />
+          {/* Launcher Grid */}
+          <div className="launcher-grid">
+            {/* Task Workspace Card */}
+            <div className="launcher-card" onClick={() => setActiveWorkspace("todos")}>
+              <div className="launcher-card-icon text-accent">
+                <CheckSquare size={28} />
+              </div>
+              <div className="launcher-card-body">
+                <h3>Task Workspace</h3>
+                <p>Manage personal tasks, completion statuses, and priorities on your unified SQL database.</p>
+                <div className="card-metrics-row">
+                  <span className="metric-badge">
+                    {openTasksCount !== null ? `${openTasksCount} active tasks` : "Open Tasks"}
+                  </span>
+                  <span className="action-link">Open &rarr;</span>
+                </div>
+              </div>
+            </div>
 
-      {/* ── Todo Workspace ── */}
-      <GlassCard className="todos-card" delay="0.15s">
-        <div className="section-header">
-          <h2 className="section-title">
-            <CheckSquare size={20} className="header-icon" />
-            <span>Workspace Operations</span>
-          </h2>
-          <button
-            className="btn btn-ghost btn-xs"
-            onClick={loadTodos}
-            disabled={loading}
-          >
-            Refresh
-          </button>
-        </div>
+            {/* Notes Workspace Card */}
+            <div className="launcher-card" onClick={() => setActiveWorkspace("notes")}>
+              <div className="launcher-card-icon text-violet">
+                <FileText size={28} />
+              </div>
+              <div className="launcher-card-body">
+                <h3>Notes Workspace</h3>
+                <p>Write, view, and organize secure markdown personal notes with live database persistence.</p>
+                <div className="card-metrics-row">
+                  <span className="metric-badge">
+                    {notesCount !== null ? `${notesCount} saved notes` : "Notes"}
+                  </span>
+                  <span className="action-link">Open &rarr;</span>
+                </div>
+              </div>
+            </div>
 
-        {error && (
-          <div className="error-banner" role="alert">
-            {error}
+            {/* MCP Hub Card */}
+            <div className="launcher-card" onClick={() => setActiveWorkspace("mcp")}>
+              <div className="launcher-card-icon text-cyan">
+                <Cpu size={28} />
+              </div>
+              <div className="launcher-card-body">
+                <h3>MCP Server Hub</h3>
+                <p>Diagnostic tools, latency latency checkers, and tool schemas for your Model Context Protocol gateway.</p>
+                <div className="card-metrics-row">
+                  <span className="metric-badge">mcp.arumugamg.com</span>
+                  <span className="action-link">Configure &rarr;</span>
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Input adding form */}
-        <AddTodoForm onAdd={handleAddTodo} loading={loading} />
+      {activeWorkspace === "todos" && (
+        <div className="todos-workspace-layout">
+          {/* Header breadcrumb row */}
+          <div className="workspace-header-row margin-bottom">
+            <button className="btn btn-ghost btn-sm back-btn" onClick={() => setActiveWorkspace("dashboard")}>
+              <ArrowLeft size={14} />
+              <span>Dashboard Launcher</span>
+            </button>
+            <span className="workspace-badge">Task Workspace</span>
+          </div>
 
-        {/* Task list board */}
-        <TodoList
-          todos={todos}
-          onToggle={handleToggleTodo}
-          onDelete={handleDeleteTodo}
-          loading={loading}
-        />
-      </GlassCard>
+          {/* Session verification configs */}
+          <AuthCard onTokenChange={() => setSessionKey((k) => k + 1)} />
+
+          {/* Todo Workspace */}
+          <GlassCard className="todos-card" delay="0.15s">
+            <div className="section-header">
+              <h2 className="section-title">
+                <CheckSquare size={20} className="header-icon" />
+                <span>Workspace Operations</span>
+              </h2>
+              <button
+                className="btn btn-ghost btn-xs"
+                onClick={loadTodos}
+                disabled={loading}
+              >
+                Refresh
+              </button>
+            </div>
+
+            {error && (
+              <div className="error-banner" role="alert">
+                {error}
+              </div>
+            )}
+
+            {/* Input adding form */}
+            <AddTodoForm onAdd={handleAddTodo} loading={loading} />
+
+            {/* Task list board */}
+            <TodoList
+              todos={todos}
+              onToggle={handleToggleTodo}
+              onDelete={handleDeleteTodo}
+              loading={loading}
+            />
+          </GlassCard>
+        </div>
+      )}
+
+      {activeWorkspace === "notes" && (
+        <NotesWorkspace onBackToDashboard={() => setActiveWorkspace("dashboard")} />
+      )}
+
+      {activeWorkspace === "mcp" && (
+        <McpWorkspace onBackToDashboard={() => setActiveWorkspace("dashboard")} />
+      )}
     </main>
   );
 }
