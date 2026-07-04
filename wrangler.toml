@@ -1,0 +1,8 @@
+name = "app-arumugamg"
+main = "src/proxy-worker.ts"
+compatibility_date = "2024-01-01"
+account_id = "c0e9215953c808eed95c8eab2cab3533"
+
+[[routes]]
+pattern = "app.arumugamg.com"
+custom_domain = true
