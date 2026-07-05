@@ -1,4 +1,4 @@
-import type { Todo, ApiStatus, DecodedToken, Note, RecurrenceRule, Subtask } from "../types";
+import type { Todo, ApiStatus, DecodedToken, Note, RecurrenceRule, Subtask, Blog } from "../types";
 
 const API_BASE = "https://api.arumugamg.com";
 
@@ -278,4 +278,47 @@ export async function completeSubtask(id: number): Promise<Subtask> {
     method: "PATCH",
     body: JSON.stringify({ status: "done" }),
   });
+}
+
+// ── Blogs ──────────────────────────────────────────────────────────────────
+
+/** Fetch all blogs with optional status filter (all/draft/published) */
+export async function fetchBlogs(status: string = "all"): Promise<Blog[]> {
+  return apiFetch<Blog[]>(`${API_BASE}/blogs?status=${status}`, { method: "GET" });
+}
+
+/** Create a new blog post */
+export async function createBlog(
+  title: string,
+  content: string,
+  slug?: string,
+  status?: "draft" | "published"
+): Promise<Blog> {
+  return apiFetch<Blog>(`${API_BASE}/blogs`, {
+    method: "POST",
+    body: JSON.stringify({ title, content, slug, status }),
+  });
+}
+
+/** Update an existing blog post */
+export async function updateBlog(id: number, fields: Partial<Blog>): Promise<Blog> {
+  return apiFetch<Blog>(`${API_BASE}/blogs/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(fields),
+  });
+}
+
+/** Delete a blog post */
+export async function deleteBlog(id: number): Promise<void> {
+  return apiFetch<void>(`${API_BASE}/blogs/${id}`, { method: "DELETE" });
+}
+
+/** Publish a blog post */
+export async function publishBlog(id: number): Promise<Blog> {
+  return apiFetch<Blog>(`${API_BASE}/blogs/${id}/publish`, { method: "PUT" });
+}
+
+/** Unpublish a blog post */
+export async function unpublishBlog(id: number): Promise<Blog> {
+  return apiFetch<Blog>(`${API_BASE}/blogs/${id}/unpublish`, { method: "PUT" });
 }

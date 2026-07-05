@@ -7,6 +7,7 @@ import { TodoList } from "./components/TodoList";
 import { LoginPanel } from "./components/LoginPanel";
 import { NotesWorkspace } from "./components/NotesWorkspace";
 import { McpWorkspace } from "./components/McpWorkspace";
+import { BlogsWorkspace } from "./components/BlogsWorkspace";
 import type { Todo, Subtask, RecurrenceRule, QuickViewFilter } from "./types";
 import {
   fetchTodos as fetchTodosApi,
@@ -30,7 +31,7 @@ import {
   isTokenExpired,
   clearJwtToken,
 } from "./api/todoApi";
-import { CheckSquare, LogOut, User, FileText, Cpu, LayoutGrid, ArrowLeft, AlertTriangle, Clock, Calendar } from "lucide-react";
+import { CheckSquare, LogOut, User, FileText, Cpu, LayoutGrid, ArrowLeft, AlertTriangle, Clock, Calendar, BookOpen } from "lucide-react";
 import "./App.css";
 
 function App() {
@@ -42,7 +43,7 @@ function App() {
   const [userEmail, setUserEmail] = useState("");
 
   // Dashboard Workspace selection state
-  const [activeWorkspace, setActiveWorkspace] = useState<"dashboard" | "todos" | "notes" | "mcp">("dashboard");
+  const [activeWorkspace, setActiveWorkspace] = useState<"dashboard" | "todos" | "notes" | "mcp" | "blogs">("dashboard");
 
   // Quick view filter (Today / Overdue / Upcoming / All)
   const [quickView, setQuickView] = useState<QuickViewFilter>("all");
@@ -480,6 +481,20 @@ function App() {
                 </div>
               </div>
             </div>
+
+            <div className="launcher-card" onClick={() => setActiveWorkspace("blogs")}>
+              <div className="launcher-card-icon" style={{ color: "#ec4899" }}>
+                <BookOpen size={28} />
+              </div>
+              <div className="launcher-card-body">
+                <h3>Blogs Manager</h3>
+                <p>Write, edit, preview and publish developer articles to blog.arumugamg.com with markdown support.</p>
+                <div className="card-metrics-row">
+                  <span className="metric-badge">blog.arumugamg.com</span>
+                  <span className="action-link">Manage &rarr;</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -623,6 +638,10 @@ function App() {
 
       {activeWorkspace === "mcp" && (
         <McpWorkspace onBackToDashboard={() => setActiveWorkspace("dashboard")} />
+      )}
+
+      {activeWorkspace === "blogs" && (
+        <BlogsWorkspace />
       )}
     </main>
   );
