@@ -374,7 +374,7 @@ function App() {
 
   if (!isAuthenticated) {
     return (
-      <main className="app-container">
+      <main className="app-container auth-container">
         <LoginPanel onLoginSuccess={() => setSessionKey((k) => k + 1)} />
         <GlassCard className="health-check-card" delay="0.1s">
           <StatusCard />
@@ -384,7 +384,7 @@ function App() {
   }
 
   return (
-    <main className="app-container">
+    <main className={`app-container workspace-${activeWorkspace}`}>
       {/* ── Dashboard Top User Bar ── */}
       <div className="dashboard-global-header">
         <div className="user-badge">

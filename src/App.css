@@ -94,6 +94,27 @@ h1, h2, h3 {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  transition: width 0.25s ease-out, max-width 0.25s ease-out;
+}
+
+.app-container.auth-container {
+  width: min(440px, calc(100% - 32px));
+}
+
+.app-container.workspace-dashboard {
+  width: min(1000px, calc(100% - 40px));
+}
+
+.app-container.workspace-todos {
+  width: min(1050px, calc(100% - 40px));
+}
+
+.app-container.workspace-notes {
+  width: min(1400px, calc(100% - 40px));
+}
+
+.app-container.workspace-mcp {
+  width: min(1100px, calc(100% - 40px));
 }
 
 /* ── Glass Card Container ─────────────────────────────────────────────── */
