@@ -4,16 +4,30 @@ const API_BASE = "https://api.arumugamg.com";
 
 // ── Auth helpers ───────────────────────────────────────────────────────────
 
+let memoryToken = "";
+
 export function getJwtToken(): string {
-  return localStorage.getItem("jwt_token") ?? "";
+  try {
+    return localStorage.getItem("jwt_token") ?? "";
+  } catch {
+    return memoryToken;
+  }
 }
 
 export function setJwtToken(token: string): void {
-  localStorage.setItem("jwt_token", token.trim());
+  try {
+    localStorage.setItem("jwt_token", token.trim());
+  } catch {
+    memoryToken = token.trim();
+  }
 }
 
 export function clearJwtToken(): void {
-  localStorage.removeItem("jwt_token");
+  try {
+    localStorage.removeItem("jwt_token");
+  } catch {
+    memoryToken = "";
+  }
 }
 
 export function decodeJwt(token: string): DecodedToken | null {
