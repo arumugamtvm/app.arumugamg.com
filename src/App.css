@@ -2024,3 +2024,28 @@ h1, h2, h3 {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Accessibility / Reduced Motion Override ── */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: scroll !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+  
+  .glass-card,
+  .status-indicator,
+  .login-panel-container,
+  .todo-item,
+  .notes-workspace,
+  .mcp-workspace {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
