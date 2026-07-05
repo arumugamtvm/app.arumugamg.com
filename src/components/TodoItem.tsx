@@ -271,10 +271,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           )}
           <span className="todo-date">{formatDate(todo.created_at)}</span>
         {/* Labels */}
-          {todo.labels && todo.labels.length > 0 && (
+          {labels.length > 0 && (
             <div className="todo-labels">
               <Tag size={9} style={{ flexShrink: 0 }} />
-              {todo.labels.map((label) => (
+              {labels.map((label) => (
                 <span key={label} className="label-chip">{label}</span>
               ))}
             </div>

@@ -120,10 +120,6 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  const loadTodos = useCallback(async () => {
-    return loadTodosByQuickView(quickView);
-  }, [loadTodosByQuickView, quickView]);
-
   const startOfMonthUTC = (d: Date): Date =>
     new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
   const endOfMonthUTC = (d: Date): Date =>

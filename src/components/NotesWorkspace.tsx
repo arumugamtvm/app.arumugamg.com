@@ -214,7 +214,7 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
       // synchronous markdown parse
       const rawHtml = marked.parse(md || "_No content. Start typing markdown..._") as string;
       return { __html: rawHtml };
-    } catch (e) {
+    } catch {
       return { __html: "Error parsing markdown" };
     }
   };
