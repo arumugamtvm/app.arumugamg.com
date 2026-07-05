@@ -43,7 +43,7 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
   const [savingStatus, setSavingStatus] = useState<"saved" | "saving" | "unsaved">("saved");
   
   // Keep refs for debouncing auto-save
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeNoteRef = useRef<Note | null>(null);
 
   // Sync activeNoteRef with state
