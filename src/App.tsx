@@ -641,7 +641,7 @@ function App() {
       )}
 
       {activeWorkspace === "blogs" && (
-        <BlogsWorkspace />
+        <BlogsWorkspace onBackToDashboard={() => setActiveWorkspace("dashboard")} />
       )}
     </main>
   );

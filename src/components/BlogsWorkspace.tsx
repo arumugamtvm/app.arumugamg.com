@@ -22,9 +22,14 @@ import {
   Link,
   Save,
   ExternalLink,
+  ArrowLeft,
 } from "lucide-react";
 
-export const BlogsWorkspace: React.FC = () => {
+interface BlogsWorkspaceProps {
+  onBackToDashboard?: () => void;
+}
+
+export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboard }) => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
@@ -222,7 +227,25 @@ export const BlogsWorkspace: React.FC = () => {
   }, [content]);
 
   return (
-    <div className="notes-workspace-container">
+    <div className="notes-workspace-container blog-manager-workspace">
+      <div className="workspace-header-row">
+        {onBackToDashboard && (
+          <button className="btn btn-ghost btn-sm back-btn" onClick={onBackToDashboard}>
+            <ArrowLeft size={14} />
+            <span>Dashboard Launcher</span>
+          </button>
+        )}
+        <span className="workspace-badge">Blog Manager</span>
+        <a
+          href="https://blog.arumugamg.com/"
+          target="_blank"
+          rel="noreferrer"
+          className="btn btn-ghost btn-sm"
+        >
+          <ExternalLink size={14} />
+          <span>Public Blog</span>
+        </a>
+      </div>
       <div className="notes-grid-layout">
         
         {/* ── Left Sidebar: Blog list ── */}

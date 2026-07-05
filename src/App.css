@@ -117,6 +117,11 @@ h1, h2, h3 {
   width: min(1100px, calc(100% - 40px));
 }
 
+.app-container.workspace-blogs {
+  width: min(1800px, calc(100% - 24px));
+  margin: 12px auto;
+}
+
 /* ── Glass Card Container ─────────────────────────────────────────────── */
 .glass-card {
   background: var(--glass-bg);
@@ -1241,6 +1246,26 @@ h1, h2, h3 {
   min-height: 550px;
 }
 
+.blog-manager-workspace {
+  height: calc(100vh - 92px);
+  min-height: 620px;
+}
+
+.blog-manager-workspace .workspace-header-row {
+  flex-shrink: 0;
+}
+
+.blog-manager-workspace .notes-grid-layout {
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: 14px;
+  height: 100%;
+}
+
+.blog-manager-workspace .notes-editor-panel,
+.blog-manager-workspace .notes-sidebar {
+  min-width: 0;
+}
+
 .notes-grid-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
@@ -2069,4 +2094,3 @@ h1, h2, h3 {
     animation: none !important;
   }
 }
-
