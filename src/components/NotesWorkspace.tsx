@@ -26,6 +26,7 @@ import {
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { ErrorBanner } from "./ui/ErrorBanner";
+import { useSyncScroll } from "../hooks/useSyncScroll";
 
 interface NotesWorkspaceProps {
   onBackToDashboard: () => void;
@@ -47,6 +48,8 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
   // Keep refs for debouncing auto-save
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeNoteRef = useRef<Note | null>(null);
+
+  const { leftPaneRef, rightPaneRef, handleLeftScroll, handleRightScroll } = useSyncScroll();
 
   // Sync activeNoteRef with state
   useEffect(() => {
@@ -401,7 +404,7 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
               {/* Body workspace depending on mode */}
               <div className={`editor-body-wrapper mode-${viewMode}`}>
                 {(viewMode === "edit" || viewMode === "split") && (
-                  <div className="editor-textarea-pane">
+                  <div className="editor-textarea-pane" ref={leftPaneRef as React.RefObject<HTMLDivElement>} onScroll={handleLeftScroll}>
                     <textarea
                       className="editor-textarea"
                       value={editContent}
@@ -412,7 +415,7 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
                 )}
 
                 {(viewMode === "preview" || viewMode === "split") && (
-                  <div className="editor-preview-pane markdown-body">
+                  <div className="editor-preview-pane markdown-body" ref={rightPaneRef as React.RefObject<HTMLDivElement>} onScroll={handleRightScroll}>
                     <div
                       dangerouslySetInnerHTML={renderMarkdown(editContent)}
                     />
