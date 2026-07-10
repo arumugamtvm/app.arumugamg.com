@@ -43,7 +43,30 @@ function App() {
   const [userEmail, setUserEmail] = useState("");
 
   // Dashboard Workspace selection state
-  const [activeWorkspace, setActiveWorkspace] = useState<"dashboard" | "todos" | "notes" | "mcp" | "blogs">("dashboard");
+  const [activeWorkspace, setActiveWorkspace] = useState<"dashboard" | "todos" | "notes" | "mcp" | "blogs">(() => {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash === "todos" || hash === "notes" || hash === "mcp" || hash === "blogs") return hash;
+    return "dashboard";
+  });
+
+  // Keep URL hash in sync so deep links like app.arumugamg.com/#blogs work
+  useEffect(() => {
+    const next = activeWorkspace === "dashboard" ? "" : `#${activeWorkspace}`;
+    if (window.location.hash !== next) {
+      window.history.replaceState(null, "", next || window.location.pathname);
+    }
+  }, [activeWorkspace]);
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      if (hash === "todos" || hash === "notes" || hash === "mcp" || hash === "blogs" || hash === "") {
+        setActiveWorkspace(hash === "" ? "dashboard" : hash);
+      }
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
 
   // Quick view filter (Today / Overdue / Upcoming / All)
   const [quickView, setQuickView] = useState<QuickViewFilter>("all");

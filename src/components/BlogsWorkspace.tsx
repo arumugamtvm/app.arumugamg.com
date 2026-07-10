@@ -7,6 +7,7 @@ import {
   deleteBlog,
   publishBlog,
   unpublishBlog,
+  uploadMedia,
 } from "../api/todoApi";
 import { marked } from "marked";
 import {
@@ -23,44 +24,71 @@ import {
   Save,
   ExternalLink,
   ArrowLeft,
+  ImagePlus,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 
 interface BlogsWorkspaceProps {
   onBackToDashboard?: () => void;
 }
 
+type SaveState = "idle" | "unsaved" | "saving" | "saved" | "error";
+
 export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboard }) => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">("split");
+  const [uploading, setUploading] = useState(false);
 
-  // Local form states
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
 
-  // Debounced auto-save refs
-  const saveTimeoutRef = useRef<any>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDirtyRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load all blogs (drafts + published) on mount
+  const clearForm = () => {
+    setTitle("");
+    setSlug("");
+    setContent("");
+    setStatus("draft");
+    isDirtyRef.current = false;
+    setSaveState("idle");
+  };
+
+  const applyBlogToForm = (blog: Blog) => {
+    setSelectedBlog(blog);
+    setTitle(blog.title);
+    setSlug(blog.slug);
+    setContent(blog.content);
+    setStatus(blog.status);
+    isDirtyRef.current = false;
+    setSaveState("saved");
+  };
+
   const loadBlogs = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await fetchBlogs("all");
       setBlogs(data);
       if (data.length > 0) {
-        handleSelectBlog(data[0]);
+        applyBlogToForm(data[0]);
       } else {
         setSelectedBlog(null);
         clearForm();
       }
     } catch (err) {
-      console.error("Failed to load blogs:", err);
+      const message = err instanceof Error ? err.message : "Failed to load blogs";
+      setError(message === "UNAUTHORIZED" ? "Session expired. Please sign in again." : message);
     } finally {
       setLoading(false);
     }
@@ -70,92 +98,90 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
     loadBlogs();
   }, []);
 
-  const clearForm = () => {
-    setTitle("");
-    setSlug("");
-    setContent("");
-    setStatus("draft");
-    isDirtyRef.current = false;
-  };
-
-  const handleSelectBlog = (blog: Blog) => {
-    if (isDirtyRef.current && selectedBlog) {
-      // Auto-save previous blog before switching
-      performSave(selectedBlog.id, title, content, slug, status);
-    }
-    setSelectedBlog(blog);
-    setTitle(blog.title);
-    setSlug(blog.slug);
-    setContent(blog.content);
-    setStatus(blog.status);
-    isDirtyRef.current = false;
-  };
-
-  const handleCreateBlog = async () => {
-    try {
-      setSaving(true);
-      const newBlog = await createBlog("Untitled Article", "# Untitled\n\nStart writing in markdown...");
-      setBlogs((prev) => [newBlog, ...prev]);
-      handleSelectBlog(newBlog);
-    } catch (err) {
-      console.error("Failed to create blog:", err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const performSave = async (
     id: number,
     t: string,
     c: string,
     s: string,
-    st: "draft" | "published"
+    st: "draft" | "published",
   ) => {
     try {
-      setSaving(true);
+      setSaveState("saving");
+      setError(null);
       const updated = await updateBlog(id, {
         title: t,
         content: c,
         slug: s,
         status: st,
       });
-      
-      // Update local lists
+
       setBlogs((prev) => prev.map((b) => (b.id === id ? updated : b)));
+      setSelectedBlog((prev) => (prev?.id === id ? updated : prev));
+      setSlug(updated.slug);
+      setTitle(updated.title);
+      setStatus(updated.status);
       isDirtyRef.current = false;
+      setSaveState("saved");
+      return updated;
     } catch (err) {
-      console.error("Failed to save blog:", err);
-    } finally {
-      setSaving(false);
+      const message = err instanceof Error ? err.message : "Failed to save blog";
+      setError(message === "UNAUTHORIZED" ? "Session expired. Please sign in again." : message);
+      setSaveState("error");
+      return null;
     }
   };
 
-  // Trigger save manual
+  const handleSelectBlog = async (blog: Blog) => {
+    if (isDirtyRef.current && selectedBlog) {
+      await performSave(selectedBlog.id, title, content, slug, status);
+    }
+    applyBlogToForm(blog);
+  };
+
+  const handleCreateBlog = async () => {
+    try {
+      setSaveState("saving");
+      setError(null);
+      const newBlog = await createBlog(
+        "Untitled Article",
+        "# Untitled\n\nStart writing in markdown. Use **Media** to upload images to Cloudflare R2.\n",
+      );
+      setBlogs((prev) => [newBlog, ...prev]);
+      applyBlogToForm(newBlog);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to create blog";
+      setError(message === "UNAUTHORIZED" ? "Session expired. Please sign in again." : message);
+      setSaveState("error");
+    }
+  };
+
   const handleManualSave = () => {
     if (!selectedBlog) return;
     performSave(selectedBlog.id, title, content, slug, status);
   };
 
-  // Trigger publish / unpublish
   const handlePublishToggle = async () => {
     if (!selectedBlog) return;
     try {
-      setSaving(true);
-      let updated: Blog;
-      if (status === "published") {
-        updated = await unpublishBlog(selectedBlog.id);
-        setStatus("draft");
-      } else {
-        updated = await publishBlog(selectedBlog.id);
-        setStatus("published");
+      if (isDirtyRef.current) {
+        const saved = await performSave(selectedBlog.id, title, content, slug, status);
+        if (!saved) return;
       }
+      setSaveState("saving");
+      setError(null);
+      const updated =
+        status === "published"
+          ? await unpublishBlog(selectedBlog.id)
+          : await publishBlog(selectedBlog.id);
+      setStatus(updated.status);
       setBlogs((prev) => prev.map((b) => (b.id === selectedBlog.id ? updated : b)));
       setSelectedBlog(updated);
       isDirtyRef.current = false;
+      setSaveState("saved");
     } catch (err) {
-      console.error("Failed to toggle publish status:", err);
-    } finally {
-      setSaving(false);
+      const message = err instanceof Error ? err.message : "Failed to update publish status";
+      setError(message === "UNAUTHORIZED" ? "Session expired. Please sign in again." : message);
+      setSaveState("error");
     }
   };
 
@@ -163,26 +189,73 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
     if (!selectedBlog) return;
     if (!confirm("Are you sure you want to permanently delete this blog post?")) return;
     try {
-      setSaving(true);
+      setSaveState("saving");
+      setError(null);
       await deleteBlog(selectedBlog.id);
       const updatedList = blogs.filter((b) => b.id !== selectedBlog.id);
       setBlogs(updatedList);
       if (updatedList.length > 0) {
-        handleSelectBlog(updatedList[0]);
+        applyBlogToForm(updatedList[0]);
       } else {
         setSelectedBlog(null);
         clearForm();
       }
     } catch (err) {
-      console.error("Failed to delete blog:", err);
-    } finally {
-      setSaving(false);
+      const message = err instanceof Error ? err.message : "Failed to delete blog";
+      setError(message === "UNAUTHORIZED" ? "Session expired. Please sign in again." : message);
+      setSaveState("error");
     }
   };
 
-  // Track changes for autosave
+  const handleMediaUpload = async (file: File) => {
+    if (!selectedBlog) return;
+    try {
+      setUploading(true);
+      setError(null);
+      const media = await uploadMedia(file);
+      const alt = file.name.replace(/\.[^.]+$/, "") || "image";
+      const isImage = media.contentType.startsWith("image/");
+      const snippet = isImage
+        ? `\n![${alt}](${media.url})\n`
+        : `\n[${media.filename}](${media.url})\n`;
+
+      const el = textareaRef.current;
+      const start = el?.selectionStart ?? content.length;
+      const end = el?.selectionEnd ?? content.length;
+      const nextContent = content.slice(0, start) + snippet + content.slice(end);
+      setContent(nextContent);
+      isDirtyRef.current = true;
+      setSaveState("unsaved");
+
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => {
+        if (selectedBlog) {
+          void performSave(selectedBlog.id, title, nextContent, slug, status);
+        }
+      }, 400);
+
+      requestAnimationFrame(() => {
+        if (!el) return;
+        el.focus();
+        const pos = start + snippet.length;
+        el.setSelectionRange(pos, pos);
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Media upload failed";
+      setError(
+        message === "UNAUTHORIZED"
+          ? "Session expired. Please sign in again."
+          : message,
+      );
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleChange = (field: "title" | "content" | "slug", val: string) => {
     isDirtyRef.current = true;
+    setSaveState("unsaved");
     if (field === "title") setTitle(val);
     if (field === "content") setContent(val);
     if (field === "slug") setSlug(val);
@@ -196,10 +269,10 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
             field === "title" ? val : title,
             field === "content" ? val : content,
             field === "slug" ? val : slug,
-            status
+            status,
           );
         }
-      }, 2000); // Auto-save after 2 seconds of inactivity
+      }, 2000);
     }
   };
 
@@ -209,7 +282,6 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
     };
   }, []);
 
-  // Filtered list
   const filteredBlogs = useMemo(() => {
     return blogs.filter((b) => {
       const q = searchQuery.toLowerCase().trim();
@@ -217,7 +289,6 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
     });
   }, [blogs, searchQuery]);
 
-  // Markdown HTML content
   const previewHtml = useMemo(() => {
     try {
       return marked.parse(content || "") as string;
@@ -225,6 +296,17 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
       return content;
     }
   }, [content]);
+
+  const saveLabel =
+    saveState === "saving"
+      ? "Saving…"
+      : saveState === "unsaved"
+        ? "Unsaved"
+        : saveState === "error"
+          ? "Save failed"
+          : saveState === "saved"
+            ? "Saved"
+            : "";
 
   return (
     <div className="notes-workspace-container blog-manager-workspace">
@@ -246,45 +328,47 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
           <span>Public Blog</span>
         </a>
       </div>
+
+      {error && (
+        <div className="error-banner" role="alert">
+          <AlertTriangle size={14} aria-hidden="true" />
+          <span>{error}</span>
+          <button className="btn btn-ghost btn-xs" onClick={() => setError(null)} aria-label="Dismiss error">
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="notes-grid-layout">
-        
-        {/* ── Left Sidebar: Blog list ── */}
         <div className="notes-sidebar">
           <div className="notes-search-wrapper">
-            <Search size={14} className="search-icon-inside" />
+            <Search size={14} className="search-icon-inside" aria-hidden="true" />
             <input
-              type="text"
+              type="search"
               placeholder="Search posts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="notes-search-input"
+              aria-label="Search blog posts"
             />
           </div>
 
-          <div 
-            style={{ 
-              padding: "12px 16px", 
-              display: "flex", 
-              justifyContent: "space-between", 
-              alignItems: "center" 
-            }}
-          >
-            <span style={{ fontSize: "0.72rem", color: "var(--clr-text-dim)", fontWeight: 600 }}>
-              ARTICLES ({filteredBlogs.length})
-            </span>
-            <button className="btn btn-ghost btn-xs" onClick={handleCreateBlog} title="New Post">
+          <div className="blog-sidebar-toolbar">
+            <span className="blog-sidebar-count">ARTICLES ({filteredBlogs.length})</span>
+            <button
+              className="btn btn-ghost btn-xs"
+              onClick={handleCreateBlog}
+              title="New Post"
+              aria-label="Create new blog post"
+            >
               <Plus size={14} />
             </button>
           </div>
 
           {loading ? (
-            <div style={{ textAlign: "center", padding: "20px", color: "var(--clr-text-dim)" }}>
-              Loading...
-            </div>
+            <div className="blog-sidebar-empty">Loading…</div>
           ) : filteredBlogs.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "20px", color: "var(--clr-text-dim)", fontSize: "0.8rem" }}>
-              No articles found
-            </div>
+            <div className="blog-sidebar-empty">No articles found</div>
           ) : (
             <div className="notes-list" style={{ overflowY: "auto", flex: 1 }}>
               {filteredBlogs.map((blog) => {
@@ -295,21 +379,12 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
                     key={blog.id}
                     className={`note-item ${isSelected ? "active" : ""}`}
                     onClick={() => handleSelectBlog(blog)}
-                    style={{ width: "100%", padding: "12px 16px" }}
+                    aria-current={isSelected ? "true" : undefined}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: "8px" }}>
-                      <span className="note-item-title" style={{ textAlign: "left", flex: 1 }}>{blog.title}</span>
-                      <span 
-                        style={{ 
-                          fontSize: "0.6rem", 
-                          padding: "2px 6px", 
-                          borderRadius: "4px", 
-                          background: isPublished ? "rgba(16, 185, 129, 0.1)" : "rgba(255, 255, 255, 0.05)",
-                          color: isPublished ? "#10b981" : "var(--clr-text-dim)",
-                          fontWeight: 600
-                        }}
-                      >
-                        {blog.status.toUpperCase()}
+                    <div className="blog-nav-row">
+                      <span className="note-item-title">{blog.title}</span>
+                      <span className={`blog-status-pill ${isPublished ? "published" : "draft"}`}>
+                        {blog.status}
                       </span>
                     </div>
                   </button>
@@ -319,19 +394,14 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
           )}
         </div>
 
-        {/* ── Right Panel: Post Editor ── */}
         {selectedBlog ? (
           <div className="notes-editor-panel">
-            
-            {/* Header controls */}
             <div className="editor-header">
-              
-              {/* Workspace mode toggle */}
-              <div className="mode-toggle-group">
+              <div className="mode-toggle-group" role="group" aria-label="Editor view mode">
                 <button
                   className={`mode-btn ${viewMode === "edit" ? "active" : ""}`}
                   onClick={() => setViewMode("edit")}
-                  title="Editor Only"
+                  aria-pressed={viewMode === "edit"}
                 >
                   <Edit3 size={13} />
                   <span>Edit</span>
@@ -339,7 +409,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
                 <button
                   className={`mode-btn ${viewMode === "split" ? "active" : ""}`}
                   onClick={() => setViewMode("split")}
-                  title="Split Screen"
+                  aria-pressed={viewMode === "split"}
                 >
                   <Columns size={13} />
                   <span>Split</span>
@@ -347,33 +417,47 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
                 <button
                   className={`mode-btn ${viewMode === "preview" ? "active" : ""}`}
                   onClick={() => setViewMode("preview")}
-                  title="Preview Only"
+                  aria-pressed={viewMode === "preview"}
                 >
                   <Eye size={13} />
                   <span>Preview</span>
                 </button>
               </div>
 
-              {/* Auto-saving status / Save Button */}
-              <div className="saving-indicator-wrapper">
-                <span className="saving-status">
-                  {saving ? (
-                    <span className="text-warning">Saving...</span>
-                  ) : (
-                    <span className="text-success">Saved</span>
-                  )}
-                </span>
+              <div className="saving-indicator-wrapper" aria-live="polite">
+                <span className={`saving-status save-${saveState}`}>{saveLabel}</span>
               </div>
 
-              {/* Actions group */}
               <div className="editor-actions">
-                <button 
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/mp4,video/webm,audio/*,application/pdf,.md,.txt"
+                  className="sr-only"
+                  aria-hidden="true"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void handleMediaUpload(file);
+                  }}
+                />
+                <button
+                  className="btn btn-ghost btn-xs"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  title="Upload media to Cloudflare R2"
+                  aria-label="Upload media"
+                >
+                  {uploading ? <Loader2 size={14} className="spin" /> : <ImagePlus size={14} />}
+                  <span>{uploading ? "Uploading…" : "Media"}</span>
+                </button>
+
+                <button
                   className={`btn btn-ghost btn-xs ${status === "published" ? "active" : ""}`}
                   onClick={handlePublishToggle}
                   style={{
                     color: status === "published" ? "#10b981" : "var(--clr-text)",
                     background: status === "published" ? "rgba(16, 185, 129, 0.1)" : "transparent",
-                    borderColor: status === "published" ? "rgba(16, 185, 129, 0.2)" : "transparent"
+                    borderColor: status === "published" ? "rgba(16, 185, 129, 0.2)" : "transparent",
                   }}
                   title={status === "published" ? "Unpublish Post" : "Publish Post"}
                 >
@@ -382,78 +466,66 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
                 </button>
 
                 {status === "published" && (
-                  <a 
+                  <a
                     href={`https://blog.arumugamg.com/#${slug}`}
                     target="_blank"
                     rel="noreferrer"
                     className="btn btn-ghost btn-xs"
                     title="View Published Post"
+                    aria-label="View published post"
                   >
                     <ExternalLink size={14} />
                   </a>
                 )}
 
-                <button 
-                  className="btn btn-ghost btn-xs" 
-                  onClick={handleManualSave}
-                  title="Force Save"
-                >
+                <button className="btn btn-ghost btn-xs" onClick={handleManualSave} title="Force Save">
                   <Save size={14} />
                 </button>
 
-                <button 
-                  className="btn btn-ghost btn-xs text-danger" 
+                <button
+                  className="btn btn-ghost btn-xs text-danger"
                   onClick={handleDeleteBlog}
                   title="Delete Post"
+                  aria-label="Delete blog post"
                 >
                   <Trash2 size={14} />
                 </button>
               </div>
             </div>
 
-            {/* Title and custom slug inputs */}
-            <div className="editor-title-container" style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "16px 20px 8px" }}>
+            <div className="editor-title-container blog-title-block">
               <input
                 type="text"
                 placeholder="Article Title..."
                 value={title}
                 onChange={(e) => handleChange("title", e.target.value)}
                 className="editor-title-input"
-                style={{ fontSize: "1.4rem", fontWeight: 700 }}
+                aria-label="Blog title"
               />
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Link size={12} className="text-dim" />
-                <span style={{ fontSize: "0.75rem", color: "var(--clr-text-dim)", fontFamily: "var(--font-mono)" }}>
-                  blog.arumugamg.com/#
-                </span>
+              <div className="blog-slug-row">
+                <Link size={12} className="text-dim" aria-hidden="true" />
+                <span className="blog-slug-prefix">blog.arumugamg.com/#</span>
                 <input
                   type="text"
                   placeholder="custom-slug"
                   value={slug}
                   onChange={(e) => handleChange("slug", e.target.value)}
-                  className="notes-search-input"
-                  style={{ 
-                    borderBottom: "1px solid var(--clr-border)", 
-                    padding: "2px 0", 
-                    width: "auto",
-                    flex: "0 1 200px",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.75rem",
-                    color: "var(--clr-accent)"
-                  }}
+                  className="notes-search-input blog-slug-input"
+                  aria-label="Blog slug"
                 />
               </div>
             </div>
 
-            {/* Split view workspace body */}
             <div className={`editor-body-wrapper mode-${viewMode}`}>
               {(viewMode === "edit" || viewMode === "split") && (
                 <div className="editor-textarea-pane">
                   <textarea
+                    ref={textareaRef}
                     value={content}
                     onChange={(e) => handleChange("content", e.target.value)}
-                    placeholder="# Hello World&#10;&#10;Write your markdown content here. Supporting headers, code tags, lists, blockquotes, images, and mermaid diagrams.&#10;&#10;```mermaid&#10;graph TD&#10;  A[Start] --> B(Process)&#10;  B --> C[End]&#10;```"
+                    placeholder="# Hello World&#10;&#10;Write markdown here. Use Media to upload images to Cloudflare R2.&#10;&#10;```mermaid&#10;graph TD&#10;  A[Start] --> B(Process)&#10;  B --> C[End]&#10;```"
                     className="editor-textarea"
+                    aria-label="Blog markdown content"
                   />
                 </div>
               )}
@@ -467,18 +539,16 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
                 </div>
               )}
             </div>
-
           </div>
         ) : (
-          <div className="notes-editor-panel" style={{ display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "center" }}>
-            <div style={{ textAlign: "center", color: "var(--clr-text-dim)" }}>
-              <BookOpen size={48} style={{ marginBottom: "16px", color: "var(--clr-border-hover)" }} />
+          <div className="notes-editor-panel blog-empty-panel">
+            <div className="blog-empty-state">
+              <BookOpen size={48} aria-hidden="true" />
               <h3>No Article Selected</h3>
-              <p style={{ fontSize: "0.8rem", marginTop: "8px" }}>Create a new post or select an existing one to begin editing.</p>
+              <p>Create a new post or select an existing one to begin editing.</p>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

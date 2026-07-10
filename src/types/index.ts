@@ -63,3 +63,11 @@ export interface Blog {
   created_at: string;
   updated_at: string;
 }
+
+export interface MediaObject {
+  key: string;
+  url: string;
+  contentType: string;
+  size: number;
+  filename: string;
+}

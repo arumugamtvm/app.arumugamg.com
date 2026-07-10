@@ -1,4 +1,4 @@
-import type { Todo, ApiStatus, DecodedToken, Note, RecurrenceRule, Subtask, Blog } from "../types";
+import type { Todo, ApiStatus, DecodedToken, Note, RecurrenceRule, Subtask, Blog, MediaObject } from "../types";
 
 const API_BASE = "https://api.arumugamg.com";
 
@@ -321,4 +321,37 @@ export async function publishBlog(id: number): Promise<Blog> {
 /** Unpublish a blog post */
 export async function unpublishBlog(id: number): Promise<Blog> {
   return apiFetch<Blog>(`${API_BASE}/blogs/${id}/unpublish`, { method: "PUT" });
+}
+
+// ── Media (Cloudflare R2 via API) ──────────────────────────────────────────
+
+/** Upload a media file to R2 (multipart) */
+export async function uploadMedia(file: File): Promise<MediaObject> {
+  const token = getJwtToken();
+  const form = new FormData();
+  form.append("file", file);
+
+  const response = await fetch(`${API_BASE}/media`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: form,
+  });
+
+  if (response.status === 401) throw new Error("UNAUTHORIZED");
+  if (!response.ok) {
+    const err = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error || `HTTP ${response.status}`);
+  }
+  return response.json() as Promise<MediaObject>;
+}
+
+/** List recent media uploads */
+export async function listMedia(limit = 50): Promise<MediaObject[]> {
+  return apiFetch<MediaObject[]>(`${API_BASE}/media?limit=${limit}`, { method: "GET" });
+}
+
+/** Delete a media object by key (e.g. media/2026/07/abc-file.webp) */
+export async function deleteMedia(key: string): Promise<void> {
+  const path = key.startsWith("media/") ? key.slice("media/".length) : key;
+  return apiFetch<void>(`${API_BASE}/media/${path}`, { method: "DELETE" });
 }
