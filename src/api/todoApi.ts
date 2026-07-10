@@ -323,9 +323,9 @@ export async function unpublishBlog(id: number): Promise<Blog> {
   return apiFetch<Blog>(`${API_BASE}/blogs/${id}/unpublish`, { method: "PUT" });
 }
 
-// ── Media (Cloudflare R2 via API) ──────────────────────────────────────────
+// ── Media (Cloudinary via API) ─────────────────────────────────────────────
 
-/** Upload a media file to R2 (multipart) */
+/** Upload a media file to Cloudinary (multipart) */
 export async function uploadMedia(file: File): Promise<MediaObject> {
   const token = getJwtToken();
   const form = new FormData();
@@ -350,8 +350,8 @@ export async function listMedia(limit = 50): Promise<MediaObject[]> {
   return apiFetch<MediaObject[]>(`${API_BASE}/media?limit=${limit}`, { method: "GET" });
 }
 
-/** Delete a media object by key (e.g. media/2026/07/abc-file.webp) */
+/** Delete a media object by Cloudinary public_id key */
 export async function deleteMedia(key: string): Promise<void> {
-  const path = key.startsWith("media/") ? key.slice("media/".length) : key;
+  const path = key.replace(/^\/+/, "");
   return apiFetch<void>(`${API_BASE}/media/${path}`, { method: "DELETE" });
 }

@@ -70,4 +70,6 @@ export interface MediaObject {
   contentType: string;
   size: number;
   filename: string;
+  provider?: "cloudinary";
+  resourceType?: string;
 }

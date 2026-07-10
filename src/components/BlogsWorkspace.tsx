@@ -144,7 +144,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
       setError(null);
       const newBlog = await createBlog(
         "Untitled Article",
-        "# Untitled\n\nStart writing in markdown. Use **Media** to upload images to Cloudflare R2.\n",
+        "# Untitled\n\nStart writing in markdown. Use **Media** to upload images to Cloudinary.\n",
       );
       setBlogs((prev) => [newBlog, ...prev]);
       applyBlogToForm(newBlog);
@@ -444,7 +444,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
                   className="btn btn-ghost btn-xs"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  title="Upload media to Cloudflare R2"
+                  title="Upload media to Cloudinary"
                   aria-label="Upload media"
                 >
                   {uploading ? <Loader2 size={14} className="spin" /> : <ImagePlus size={14} />}
@@ -523,7 +523,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
                     ref={textareaRef}
                     value={content}
                     onChange={(e) => handleChange("content", e.target.value)}
-                    placeholder="# Hello World&#10;&#10;Write markdown here. Use Media to upload images to Cloudflare R2.&#10;&#10;```mermaid&#10;graph TD&#10;  A[Start] --> B(Process)&#10;  B --> C[End]&#10;```"
+                    placeholder="# Hello World&#10;&#10;Write markdown here. Use Media to upload images to Cloudinary.&#10;&#10;```mermaid&#10;graph TD&#10;  A[Start] --> B(Process)&#10;  B --> C[End]&#10;```"
                     className="editor-textarea"
                     aria-label="Blog markdown content"
                   />
