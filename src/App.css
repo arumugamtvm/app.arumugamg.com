@@ -118,8 +118,10 @@ h1, h2, h3 {
 }
 
 .app-container.workspace-blogs {
-  width: min(1800px, calc(100% - 24px));
+  width: 100%;
+  max-width: 1800px;
   margin: 12px auto;
+  padding: 0 12px;
 }
 
 /* ── Glass Card Container ─────────────────────────────────────────────── */
@@ -1901,12 +1903,15 @@ h1, h2, h3 {
 
 /* ── Responsive Note / MCP Styles ── */
 @media (max-width: 620px) {
-  .notes-grid-layout {
+  .notes-grid-layout,
+  .blog-manager-workspace .notes-grid-layout {
     grid-template-columns: 1fr;
     grid-template-rows: 200px 1fr;
   }
-  .notes-workspace-container {
+  .notes-workspace-container,
+  .blog-manager-workspace {
     height: auto;
+    min-height: auto;
   }
   .launcher-grid {
     grid-template-columns: 1fr;

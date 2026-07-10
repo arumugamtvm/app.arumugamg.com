@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { TodoWorkspace } from "./components/TodoWorkspace";
 import { NotesWorkspace } from "./components/NotesWorkspace";
 import { McpWorkspace } from "./components/McpWorkspace";
@@ -119,6 +119,7 @@ function MainApp() {
   const [sessionKey, setSessionKey] = useState(0);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const checkAuth = () => {
@@ -141,6 +142,13 @@ function MainApp() {
     navigate("/");
   };
 
+  let containerClass = "app-container";
+  if (location.pathname === "/") containerClass += " workspace-dashboard";
+  else if (location.pathname === "/todos") containerClass += " workspace-todos";
+  else if (location.pathname === "/notes") containerClass += " workspace-notes";
+  else if (location.pathname === "/mcp") containerClass += " workspace-mcp";
+  else if (location.pathname === "/blogs") containerClass += " workspace-blogs";
+
   if (!isAuthenticated) {
     return (
       <main className="app-container app-login-layout">
@@ -150,7 +158,7 @@ function MainApp() {
   }
 
   return (
-    <main className="app-container">
+    <main className={containerClass}>
       <div className="dashboard-global-header">
         <div className="header-brand" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>
           <div className="brand-logo" />
