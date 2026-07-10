@@ -29,6 +29,7 @@ import {
   AlertTriangle,
   Loader2,
 } from "lucide-react";
+import { useSyncScroll } from "../hooks/useSyncScroll";
 
 interface BlogsWorkspaceProps {
   onBackToDashboard?: () => void;
@@ -50,6 +51,8 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
+
+  const { leftPaneRef, rightPaneRef, handleLeftScroll, handleRightScroll } = useSyncScroll();
 
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDirtyRef = useRef(false);
@@ -520,7 +523,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
 
             <div className={`editor-body-wrapper mode-${viewMode}`}>
               {(viewMode === "edit" || viewMode === "split") && (
-                <div className="editor-textarea-pane">
+                <div className="editor-textarea-pane" ref={leftPaneRef as React.RefObject<HTMLDivElement>} onScroll={handleLeftScroll}>
                   <textarea
                     ref={textareaRef}
                     value={content}
@@ -533,7 +536,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
               )}
 
               {(viewMode === "preview" || viewMode === "split") && (
-                <div className="editor-preview-pane">
+                <div className="editor-preview-pane markdown-body" ref={rightPaneRef as React.RefObject<HTMLDivElement>} onScroll={handleRightScroll}>
                   <div
                     className="markdown-body"
                     dangerouslySetInnerHTML={{ __html: previewHtml }}
