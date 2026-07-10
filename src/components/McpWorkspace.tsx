@@ -144,7 +144,7 @@ export const McpWorkspace: React.FC<McpWorkspaceProps> = ({ onBackToDashboard })
                 <span className="tool-name">complete_todo</span>
                 <span className="tool-type writable">Write-Only</span>
               </div>
-              <p className="tool-desc">Updates status column matching the specified ID parameter to 'done'.</p>
+              <p className="tool-desc">Marks a todo complete by ID (handles recurring horizon generation).</p>
             </div>
 
             <div className="tool-item">
