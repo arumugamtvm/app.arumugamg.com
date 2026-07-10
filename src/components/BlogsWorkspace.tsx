@@ -10,6 +10,7 @@ import {
   uploadMedia,
 } from "../api/todoApi";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 import {
   BookOpen,
   Plus,
@@ -291,7 +292,8 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
 
   const previewHtml = useMemo(() => {
     try {
-      return marked.parse(content || "") as string;
+      const rawHtml = marked.parse(content || "") as string;
+      return DOMPurify.sanitize(rawHtml);
     } catch {
       return content;
     }

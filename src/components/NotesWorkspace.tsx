@@ -24,6 +24,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
+import { ErrorBanner } from "./ui/ErrorBanner";
 
 interface NotesWorkspaceProps {
   onBackToDashboard: () => void;
@@ -211,9 +213,10 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
 
   const renderMarkdown = (md: string) => {
     try {
-      // synchronous markdown parse
+      // synchronous markdown parse and sanitize to prevent XSS
       const rawHtml = marked.parse(md || "_No content. Start typing markdown..._") as string;
-      return { __html: rawHtml };
+      const cleanHtml = DOMPurify.sanitize(rawHtml);
+      return { __html: cleanHtml };
     } catch {
       return { __html: "Error parsing markdown" };
     }
@@ -227,10 +230,12 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
     <div className="notes-workspace-container">
       {/* Notion style workspace header */}
       <div className="workspace-header-row">
-        <button className="btn btn-ghost btn-sm back-btn" onClick={onBackToDashboard}>
-          <ArrowLeft size={14} />
-          <span>Dashboard Launcher</span>
-        </button>
+        {onBackToDashboard && (
+          <button className="btn btn-ghost btn-sm back-btn" onClick={onBackToDashboard}>
+            <ArrowLeft size={14} />
+            <span>Dashboard Launcher</span>
+          </button>
+        )}
         <div className="saving-indicator-wrapper">
           {savingStatus === "saving" && (
             <span className="saving-status text-dim">
@@ -249,11 +254,7 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
         <span className="workspace-badge">Notes Workspace</span>
       </div>
 
-      {error && (
-        <div className="error-banner" role="alert">
-          {error}
-        </div>
-      )}
+      <ErrorBanner message={error} />
 
       <div className="notes-grid-layout">
         {/* ── Left Sidebar: Notion-like list ── */}
