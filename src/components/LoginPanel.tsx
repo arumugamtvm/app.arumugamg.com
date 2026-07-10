@@ -4,13 +4,14 @@ import type { PkcePair } from "../api/authApi";
 import { setJwtToken } from "../api/todoApi";
 import { GlassCard } from "./GlassCard";
 import { Mail, ShieldCheck, KeyRound, ArrowRight, ArrowLeft } from "lucide-react";
+import { ErrorBanner } from "./ui/ErrorBanner";
 
 interface LoginPanelProps {
   onLoginSuccess: () => void;
 }
 
 export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState("garumugamtvm@gmail.com"); // Pre-filled default allowed email
+  const [email, setEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [step, setStep] = useState<"email" | "verify">("email");
   const [loading, setLoading] = useState(false);
@@ -98,11 +99,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
           <p className="login-subtitle">Email One-Time Password Authentication</p>
         </div>
 
-        {error && (
-          <div className="error-banner" role="alert">
-            {error}
-          </div>
-        )}
+        <ErrorBanner message={error} />
 
         {successMsg && (
           <div className="success-banner" role="alert">
