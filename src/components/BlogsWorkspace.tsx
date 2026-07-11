@@ -28,6 +28,7 @@ import {
   ImagePlus,
   AlertTriangle,
   Loader2,
+  FileText,
 } from "lucide-react";
 import { useSyncScroll } from "../hooks/useSyncScroll";
 
@@ -36,6 +37,20 @@ interface BlogsWorkspaceProps {
 }
 
 type SaveState = "idle" | "unsaved" | "saving" | "saved" | "error";
+
+function timeAgo(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const sec = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (sec < 60) return "just now";
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 7) return `${day}d ago`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboard }) => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -52,7 +67,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
 
-  const { leftPaneRef, rightPaneRef, handleLeftScroll, handleRightScroll } = useSyncScroll();
+  const { leftPaneRef, rightPaneRef } = useSyncScroll();
 
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDirtyRef = useRef(false);
@@ -386,11 +401,15 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
                     onClick={() => handleSelectBlog(blog)}
                     aria-current={isSelected ? "true" : undefined}
                   >
-                    <div className="blog-nav-row">
-                      <span className="note-item-title">{blog.title}</span>
-                      <span className={`blog-status-pill ${isPublished ? "published" : "draft"}`}>
-                        {blog.status}
-                      </span>
+                    <FileText size={14} className="note-item-icon" aria-hidden="true" />
+                    <div className="note-item-meta">
+                      <span className="note-item-title">{blog.title || "Untitled Article"}</span>
+                      <div className="blog-item-meta-row">
+                        <span className={`blog-status-pill ${isPublished ? "published" : "draft"}`}>
+                          {blog.status}
+                        </span>
+                        <span className="note-item-date">{timeAgo(blog.updated_at)}</span>
+                      </div>
                     </div>
                   </button>
                 );
@@ -472,7 +491,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
 
                 {status === "published" && (
                   <a
-                    href={`https://blog.arumugamg.com/#${slug}`}
+                    href={`https://blog.arumugamg.com/${slug}`}
                     target="_blank"
                     rel="noreferrer"
                     className="btn btn-ghost btn-xs"
@@ -509,7 +528,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
               />
               <div className="blog-slug-row">
                 <Link size={12} className="text-dim" aria-hidden="true" />
-                <span className="blog-slug-prefix">blog.arumugamg.com/#</span>
+                <span className="blog-slug-prefix">blog.arumugamg.com/</span>
                 <input
                   type="text"
                   placeholder="custom-slug"
@@ -523,9 +542,12 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
 
             <div className={`editor-body-wrapper mode-${viewMode}`}>
               {(viewMode === "edit" || viewMode === "split") && (
-                <div className="editor-textarea-pane" ref={leftPaneRef as React.RefObject<HTMLDivElement>} onScroll={handleLeftScroll}>
+                <div className="editor-textarea-pane">
                   <textarea
-                    ref={textareaRef}
+                    ref={(el) => {
+                      textareaRef.current = el;
+                      leftPaneRef(el);
+                    }}
                     value={content}
                     onChange={(e) => handleChange("content", e.target.value)}
                     placeholder="# Hello World&#10;&#10;Write markdown here. Use Media to upload images to Cloudinary.&#10;&#10;```mermaid&#10;graph TD&#10;  A[Start] --> B(Process)&#10;  B --> C[End]&#10;```"
@@ -536,7 +558,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
               )}
 
               {(viewMode === "preview" || viewMode === "split") && (
-                <div className="editor-preview-pane markdown-body" ref={rightPaneRef as React.RefObject<HTMLDivElement>} onScroll={handleRightScroll}>
+                <div className="editor-preview-pane markdown-body" ref={rightPaneRef}>
                   <div
                     className="markdown-body"
                     dangerouslySetInnerHTML={{ __html: previewHtml }}

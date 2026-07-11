@@ -1,5 +1,9 @@
 const AUTH_BASE = "https://mcp.arumugamg.com";
 
+// Single authorized account (mirrors mcp.arumugamg.com ALLOWED_EMAIL).
+// The auth backend rejects any other address, so the email step is skipped.
+export const DEFAULT_EMAIL = "garumugamtvm@gmail.com";
+
 // ── PKCE Helper Functions ───────────────────────────────────────────────────
 
 function generateRandomString(length: number): string {

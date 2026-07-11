@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { generatePKCE, requestOtp, verifyOtp, exchangeCodeForToken } from "../api/authApi";
+import { generatePKCE, requestOtp, verifyOtp, exchangeCodeForToken, DEFAULT_EMAIL } from "../api/authApi";
 import type { PkcePair } from "../api/authApi";
 import { setJwtToken } from "../api/todoApi";
 import { GlassCard } from "./GlassCard";
-import { Mail, ShieldCheck, KeyRound, ArrowRight, ArrowLeft } from "lucide-react";
+import { ShieldCheck, KeyRound, ArrowRight, ArrowLeft, MailCheck } from "lucide-react";
 import { ErrorBanner } from "./ui/ErrorBanner";
 
 interface LoginPanelProps {
@@ -11,9 +11,8 @@ interface LoginPanelProps {
 }
 
 export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
-  const [step, setStep] = useState<"email" | "verify">("email");
+  const [step, setStep] = useState<"request" | "verify">("request");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -28,10 +27,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
     }
   }, [resendCooldown]);
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || loading) return;
-
+  const sendCode = async () => {
+    if (loading) return;
     setLoading(true);
     setError(null);
     setSuccessMsg(null);
@@ -41,10 +38,10 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
       const pkcePair = await generatePKCE();
       setPkce(pkcePair);
 
-      // 2. Request OTP code from auth server
-      await requestOtp(email.trim());
-      
-      setSuccessMsg("Verification code successfully sent to your inbox.");
+      // 2. Request OTP code from auth server for the default authorized email
+      await requestOtp(DEFAULT_EMAIL);
+
+      setSuccessMsg("Verification code sent to your inbox.");
       setStep("verify");
       setResendCooldown(30); // 30s resend cooldown
     } catch (err) {
@@ -52,6 +49,11 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSendOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    void sendCode();
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -64,7 +66,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
 
     try {
       // 1. Verify code and extract auth code
-      const authCode = await verifyOtp(email.trim(), otpCode.trim(), pkce.challenge);
+      const authCode = await verifyOtp(DEFAULT_EMAIL, otpCode.trim(), pkce.challenge);
 
       // 2. Exchange auth code and verifier for JWT token
       const accessToken = await exchangeCodeForToken(authCode, pkce.verifier);
@@ -82,7 +84,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
   };
 
   const handleGoBack = () => {
-    setStep("email");
+    setStep("request");
     setOtpCode("");
     setError(null);
     setSuccessMsg(null);
@@ -107,35 +109,27 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
           </div>
         )}
 
-        {step === "email" ? (
-          /* ── STEP 1: Input Email ── */
+        {step === "request" ? (
+          /* ── STEP 1: Send code to the default authorized email ── */
           <form onSubmit={handleSendOtp} className="login-form">
-            <div className="input-group-vertical">
-              <label className="input-label">Authorized Email Address</label>
-              <div className="input-with-icon">
-                <Mail size={16} className="input-icon" />
-                <input
-                  type="email"
-                  className="login-input"
-                  placeholder="Enter your email..."
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                  required
-                />
+            <div className="default-email-notice">
+              <MailCheck size={18} className="default-email-icon" />
+              <div className="default-email-text">
+                <span className="default-email-label">A one-time code will be sent to</span>
+                <span className="default-email-value">{DEFAULT_EMAIL}</span>
               </div>
             </div>
 
             <button
               type="submit"
               className="btn btn-primary login-submit-btn"
-              disabled={loading || !email.trim()}
+              disabled={loading}
             >
               {loading ? (
                 <span className="spinner" />
               ) : (
                 <>
-                  <span>Send OTP Code</span>
+                  <span>Send Verification Code</span>
                   <ArrowRight size={16} />
                 </>
               )}
@@ -176,7 +170,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
-                onClick={handleSendOtp}
+                onClick={() => void sendCode()}
                 disabled={loading || resendCooldown > 0}
               >
                 {resendCooldown > 0 ? `Resend (${resendCooldown}s)` : "Resend"}

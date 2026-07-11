@@ -1,37 +1,57 @@
-import { useRef } from 'react';
-import type { UIEvent } from 'react';
+import { useCallback, useRef } from 'react';
 
+/**
+ * Proportionally synchronizes vertical scrolling between two independently
+ * scrollable elements (e.g. a markdown editor textarea and its rendered preview).
+ *
+ * The returned refs are callback refs that attach native `scroll` listeners
+ * directly to the elements. Attach them to the element that actually scrolls:
+ * for a textarea-based editor that is the <textarea> itself (textareas scroll
+ * internally), not the wrapping pane div.
+ */
 export function useSyncScroll() {
-  const leftPaneRef = useRef<HTMLDivElement>(null);
-  const rightPaneRef = useRef<HTMLDivElement>(null);
-  const isSyncingLeft = useRef(false);
-  const isSyncingRight = useRef(false);
+  const leftEl = useRef<HTMLElement | null>(null);
+  const rightEl = useRef<HTMLElement | null>(null);
+  const syncingLeft = useRef(false);
+  const syncingRight = useRef(false);
 
-  const handleLeftScroll = (e: UIEvent<HTMLDivElement>) => {
-    if (!rightPaneRef.current) return;
-    if (isSyncingLeft.current) {
-      isSyncingLeft.current = false;
+  const handleLeftScroll = useCallback(() => {
+    const source = leftEl.current;
+    const target = rightEl.current;
+    if (!source || !target) return;
+    if (syncingLeft.current) {
+      syncingLeft.current = false;
       return;
     }
-    isSyncingRight.current = true;
-    const source = e.currentTarget;
-    const target = rightPaneRef.current;
-    const percentage = source.scrollTop / (source.scrollHeight - source.clientHeight || 1);
-    target.scrollTop = percentage * (target.scrollHeight - target.clientHeight);
-  };
+    syncingRight.current = true;
+    const sourceMax = source.scrollHeight - source.clientHeight || 1;
+    target.scrollTop = (source.scrollTop / sourceMax) * (target.scrollHeight - target.clientHeight);
+  }, []);
 
-  const handleRightScroll = (e: UIEvent<HTMLDivElement>) => {
-    if (!leftPaneRef.current) return;
-    if (isSyncingRight.current) {
-      isSyncingRight.current = false;
+  const handleRightScroll = useCallback(() => {
+    const source = rightEl.current;
+    const target = leftEl.current;
+    if (!source || !target) return;
+    if (syncingRight.current) {
+      syncingRight.current = false;
       return;
     }
-    isSyncingLeft.current = true;
-    const source = e.currentTarget;
-    const target = leftPaneRef.current;
-    const percentage = source.scrollTop / (source.scrollHeight - source.clientHeight || 1);
-    target.scrollTop = percentage * (target.scrollHeight - target.clientHeight);
-  };
+    syncingLeft.current = true;
+    const sourceMax = source.scrollHeight - source.clientHeight || 1;
+    target.scrollTop = (source.scrollTop / sourceMax) * (target.scrollHeight - target.clientHeight);
+  }, []);
+
+  const leftPaneRef = useCallback((el: HTMLElement | null) => {
+    if (leftEl.current) leftEl.current.removeEventListener('scroll', handleLeftScroll);
+    leftEl.current = el;
+    if (el) el.addEventListener('scroll', handleLeftScroll, { passive: true });
+  }, [handleLeftScroll]);
+
+  const rightPaneRef = useCallback((el: HTMLElement | null) => {
+    if (rightEl.current) rightEl.current.removeEventListener('scroll', handleRightScroll);
+    rightEl.current = el;
+    if (el) el.addEventListener('scroll', handleRightScroll, { passive: true });
+  }, [handleRightScroll]);
 
   return { leftPaneRef, rightPaneRef, handleLeftScroll, handleRightScroll };
 }

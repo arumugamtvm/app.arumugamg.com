@@ -7,6 +7,8 @@ import { BlogsWorkspace } from "./components/BlogsWorkspace";
 import { LoginPanel } from "./components/LoginPanel";
 import { GlassCard } from "./components/GlassCard";
 import { StatusCard } from "./components/StatusCard";
+import { ThemeToggle } from "./components/ThemeToggle";
+import { useTheme } from "./hooks/useTheme";
 import { getJwtToken, decodeJwt, isTokenExpired, clearJwtToken, fetchOverdueTodos } from "./api/todoApi";
 
 import {
@@ -32,8 +34,13 @@ function Dashboard() {
   return (
     <div className="dashboard-grid-launcher">
       <GlassCard className="hero-card" glow={true} delay="0s">
-        <h1 className="hero-title">arumugamg.com</h1>
-        <p className="hero-subtitle">Unified Launchpad Gateway Dashboard</p>
+        <div className="hero-brand-row">
+          <div className="hero-brand-logo" aria-hidden="true" />
+          <div className="hero-brand-text">
+            <h1 className="hero-title">arumugamg.com</h1>
+            <p className="hero-subtitle">Unified Launchpad Gateway</p>
+          </div>
+        </div>
         <StatusCard />
       </GlassCard>
 
@@ -50,65 +57,72 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="launcher-grid">
-        <Link to="/todos" className="launcher-card" style={{ textDecoration: 'none' }}>
-          <div className="launcher-card-icon text-accent">
-            <CheckSquare size={28} />
-          </div>
-          <div className="launcher-card-body">
-            <h3>Task Workspace</h3>
-            <p>Manage personal tasks, priorities, labels and recurrence rules with Todoist-inspired smart views.</p>
-            <div className="card-metrics-row">
-              <span className="metric-badge">Open Tasks</span>
-              {overdueCount !== null && overdueCount > 0 && (
-                <span className="metric-badge metric-badge-danger">{overdueCount} overdue</span>
-              )}
-              <span className="action-link">Open &rarr;</span>
-            </div>
-          </div>
-        </Link>
+      <div className="launcher-section">
+        <div className="launcher-section-label">
+          <span>Workspaces</span>
+          <span className="launcher-section-hint">Choose a workspace to continue</span>
+        </div>
 
-        <Link to="/notes" className="launcher-card" style={{ textDecoration: 'none' }}>
-          <div className="launcher-card-icon text-violet">
-            <FileText size={28} />
-          </div>
-          <div className="launcher-card-body">
-            <h3>Notes Workspace</h3>
-            <p>Write, view, and organize secure markdown personal notes with live database persistence.</p>
-            <div className="card-metrics-row">
-              <span className="metric-badge">Notes</span>
-              <span className="action-link">Open &rarr;</span>
+        <div className="launcher-grid">
+          <Link to="/todos" className="launcher-card">
+            <div className="launcher-card-icon icon-accent text-accent">
+              <CheckSquare size={24} />
             </div>
-          </div>
-        </Link>
+            <div className="launcher-card-body">
+              <h3>Task Workspace</h3>
+              <p>Manage personal tasks, priorities, labels and recurrence rules with smart views.</p>
+              <div className="card-metrics-row">
+                <span className="metric-badge">Open Tasks</span>
+                {overdueCount !== null && overdueCount > 0 && (
+                  <span className="metric-badge metric-badge-danger">{overdueCount} overdue</span>
+                )}
+                <span className="action-link">Open &rarr;</span>
+              </div>
+            </div>
+          </Link>
 
-        <Link to="/mcp" className="launcher-card" style={{ textDecoration: 'none' }}>
-          <div className="launcher-card-icon text-cyan">
-            <Cpu size={28} />
-          </div>
-          <div className="launcher-card-body">
-            <h3>MCP Server Hub</h3>
-            <p>Diagnostic tools, latency checkers, and tool schemas for your Model Context Protocol gateway.</p>
-            <div className="card-metrics-row">
-              <span className="metric-badge">mcp.arumugamg.com</span>
-              <span className="action-link">Configure &rarr;</span>
+          <Link to="/notes" className="launcher-card">
+            <div className="launcher-card-icon icon-violet text-violet">
+              <FileText size={24} />
             </div>
-          </div>
-        </Link>
+            <div className="launcher-card-body">
+              <h3>Notes Workspace</h3>
+              <p>Write, view, and organize secure markdown personal notes with live database persistence.</p>
+              <div className="card-metrics-row">
+                <span className="metric-badge">Notes</span>
+                <span className="action-link">Open &rarr;</span>
+              </div>
+            </div>
+          </Link>
 
-        <Link to="/blogs" className="launcher-card" style={{ textDecoration: 'none' }}>
-          <div className="launcher-card-icon" style={{ color: "#ec4899" }}>
-            <BookOpen size={28} />
-          </div>
-          <div className="launcher-card-body">
-            <h3>Blogs Manager</h3>
-            <p>Write, edit, preview and publish developer articles to blog.arumugamg.com with markdown support.</p>
-            <div className="card-metrics-row">
-              <span className="metric-badge">blog.arumugamg.com</span>
-              <span className="action-link">Manage &rarr;</span>
+          <Link to="/mcp" className="launcher-card">
+            <div className="launcher-card-icon icon-cyan text-cyan">
+              <Cpu size={24} />
             </div>
-          </div>
-        </Link>
+            <div className="launcher-card-body">
+              <h3>MCP Server Hub</h3>
+              <p>Diagnostic tools, latency checkers, and tool schemas for your Model Context Protocol gateway.</p>
+              <div className="card-metrics-row">
+                <span className="metric-badge">MCP Gateway</span>
+                <span className="action-link">Configure &rarr;</span>
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/blogs" className="launcher-card">
+            <div className="launcher-card-icon icon-pink text-pink">
+              <BookOpen size={24} />
+            </div>
+            <div className="launcher-card-body">
+              <h3>Blogs Manager</h3>
+              <p>Write, edit, preview and publish developer articles to blog.arumugamg.com with markdown support.</p>
+              <div className="card-metrics-row">
+                <span className="metric-badge">Blog Engine</span>
+                <span className="action-link">Manage &rarr;</span>
+              </div>
+            </div>
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -120,6 +134,7 @@ function MainApp() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { preference, cycle } = useTheme();
 
   useEffect(() => {
     const checkAuth = () => {
@@ -152,6 +167,9 @@ function MainApp() {
   if (!isAuthenticated) {
     return (
       <main className="app-container app-login-layout">
+        <div className="login-theme-floating">
+          <ThemeToggle preference={preference} onCycle={cycle} />
+        </div>
         <LoginPanel onLoginSuccess={() => setSessionKey((k) => k + 1)} />
       </main>
     );
@@ -165,6 +183,7 @@ function MainApp() {
           <span className="brand-text">A.G Gateway</span>
         </div>
         <div className="header-actions">
+          <ThemeToggle preference={preference} onCycle={cycle} />
           {userEmail && <span className="user-email-display">{userEmail}</span>}
           <button className="btn btn-ghost btn-xs logout-btn" onClick={handleLogout}>
             <LogOut size={12} />
