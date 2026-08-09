@@ -294,15 +294,15 @@ export const TodoWorkspace: React.FC<TodoWorkspaceProps> = ({
   };
 
   return (
-    <div className="todos-workspace-layout">
-      <div className="workspace-header-row margin-bottom">
+    <div className="workspace-shell todos-workspace-layout">
+      <div className="workspace-header-row">
         {onBackToDashboard && (
           <button className="btn btn-ghost btn-sm back-btn" onClick={onBackToDashboard}>
             <ArrowLeft size={14} />
-            <span>Dashboard Launcher</span>
+            <span>Dashboard</span>
           </button>
         )}
-        <span className="workspace-badge">Task Workspace</span>
+        <span className="workspace-badge">Tasks</span>
       </div>
 
       <AuthCard onTokenChange={onTokenChange} />

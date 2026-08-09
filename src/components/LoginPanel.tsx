@@ -95,10 +95,11 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onLoginSuccess }) => {
       <GlassCard className="login-card" glow={true} delay="0s">
         <div className="login-header">
           <div className="lock-icon-container">
-            <ShieldCheck size={28} className="lock-icon" />
+            <ShieldCheck size={26} className="lock-icon" />
           </div>
-          <h1 className="login-title">Secure Portal</h1>
-          <p className="login-subtitle">Email One-Time Password Authentication</p>
+          <p className="login-eyebrow">arumugamg.com</p>
+          <h1 className="login-title">Sign in</h1>
+          <p className="login-subtitle">One-time code sent to your authorized email</p>
         </div>
 
         <ErrorBanner message={error} />

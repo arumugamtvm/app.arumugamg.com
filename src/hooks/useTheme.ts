@@ -21,6 +21,10 @@ function applyTheme(theme: ResolvedTheme) {
   if (typeof document === "undefined") return;
   document.documentElement.setAttribute("data-theme", theme);
   document.documentElement.style.colorScheme = theme;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    meta.setAttribute("content", theme === "light" ? "#f2f4f6" : "#0a0c0f");
+  }
 }
 
 export function useTheme() {

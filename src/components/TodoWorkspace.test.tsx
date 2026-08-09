@@ -23,7 +23,7 @@ describe('TodoWorkspace', () => {
     render(<TodoWorkspace onBackToDashboard={vi.fn()} sessionKey={1} onTokenChange={vi.fn()} />);
 
     // Check header
-    expect(screen.getByText('Task Workspace')).toBeInTheDocument();
+    expect(screen.getByText('Tasks')).toBeInTheDocument();
 
     // Check quick view tabs
     expect(screen.getAllByText('All Tasks')[0]).toBeInTheDocument();

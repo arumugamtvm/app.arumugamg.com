@@ -230,15 +230,12 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
   const otherNotes = notes.filter((n) => n.pinned !== 1);
 
   return (
-    <div className="notes-workspace-container">
-      {/* Notion style workspace header */}
+    <div className="workspace-shell">
       <div className="workspace-header-row">
-        {onBackToDashboard && (
-          <button className="btn btn-ghost btn-sm back-btn" onClick={onBackToDashboard}>
-            <ArrowLeft size={14} />
-            <span>Dashboard Launcher</span>
-          </button>
-        )}
+        <button className="btn btn-ghost btn-sm back-btn" onClick={onBackToDashboard}>
+          <ArrowLeft size={14} />
+          <span>Dashboard</span>
+        </button>
         <div className="saving-indicator-wrapper">
           {savingStatus === "saving" && (
             <span className="saving-status text-dim">
@@ -247,55 +244,77 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
           )}
           {savingStatus === "saved" && (
             <span className="saving-status text-success">
-              <CheckCircle size={12} /> Saved to cloud
+              <CheckCircle size={12} /> Saved
             </span>
           )}
           {savingStatus === "unsaved" && (
-            <span className="saving-status text-warning">Unsaved changes</span>
+            <span className="saving-status text-warning">Unsaved</span>
           )}
         </div>
-        <span className="workspace-badge">Notes Workspace</span>
+        <span className="workspace-badge">Notes</span>
       </div>
 
       <ErrorBanner message={error} />
 
-      <div className="notes-grid-layout">
-        {/* ── Left Sidebar: Notion-like list ── */}
-        <div className="notes-sidebar">
-          {/* Search bar */}
-          <div className="notes-search-wrapper">
-            <Search size={14} className="search-icon-inside" />
-            <input
-              type="text"
-              className="notes-search-input"
-              placeholder="Search title, content..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+      <div className="notes-workspace-container workspace-panel">
+        <div className="notes-grid-layout">
+          {/* ── Left Sidebar: Notion-like list ── */}
+          <div className="notes-sidebar">
+            {/* Search bar */}
+            <div className="notes-search-wrapper">
+              <Search size={14} className="search-icon-inside" />
+              <input
+                type="text"
+                className="notes-search-input"
+                placeholder="Search title, content..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
 
-          <div className="sidebar-header">
-            <h3>Documents</h3>
-            <button className="btn btn-primary btn-icon btn-sm" onClick={handleCreateNote} title="New Document">
-              <Plus size={15} />
-            </button>
-          </div>
+            <div className="sidebar-header">
+              <h3>Documents</h3>
+              <button className="btn btn-primary btn-icon btn-sm" onClick={handleCreateNote} title="New Document">
+                <Plus size={15} />
+              </button>
+            </div>
 
-          <div className="notes-list-scroll">
-            {notes.length === 0 ? (
-              <p className="no-items-text">No documents found.</p>
-            ) : (
-              <>
-                {/* Pinned section */}
-                {pinnedNotes.length > 0 && (
+            <div className="notes-list-scroll">
+              {notes.length === 0 ? (
+                <p className="no-items-text">No documents found.</p>
+              ) : (
+                <>
+                  {/* Pinned section */}
+                  {pinnedNotes.length > 0 && (
+                    <div className="sidebar-section">
+                      <span className="sidebar-section-title">
+                        <Pin size={10} className="pin-title-icon" /> Pinned
+                      </span>
+                      {pinnedNotes.map((note) => (
+                        <div
+                          key={note.id}
+                          className={`notes-list-item pinned ${activeNote?.id === note.id ? "active" : ""}`}
+                          onClick={() => selectNote(note)}
+                        >
+                          <FileText size={14} className="note-item-icon" />
+                          <div className="note-item-meta">
+                            <span className="note-item-title">{note.title || "Untitled Document"}</span>
+                            <span className="note-item-date">
+                              {new Date(note.updated_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* All / Others section */}
                   <div className="sidebar-section">
-                    <span className="sidebar-section-title">
-                      <Pin size={10} className="pin-title-icon" /> Pinned
-                    </span>
-                    {pinnedNotes.map((note) => (
+                    {pinnedNotes.length > 0 && <span className="sidebar-section-title">Others</span>}
+                    {otherNotes.map((note) => (
                       <div
                         key={note.id}
-                        className={`notes-list-item pinned ${activeNote?.id === note.id ? "active" : ""}`}
+                        className={`notes-list-item ${activeNote?.id === note.id ? "active" : ""}`}
                         onClick={() => selectNote(note)}
                       >
                         <FileText size={14} className="note-item-icon" />
@@ -308,132 +327,112 @@ export const NotesWorkspace: React.FC<NotesWorkspaceProps> = ({ onBackToDashboar
                       </div>
                     ))}
                   </div>
-                )}
+                </>
+              )}
+            </div>
+          </div>
 
-                {/* All / Others section */}
-                <div className="sidebar-section">
-                  {pinnedNotes.length > 0 && <span className="sidebar-section-title">Others</span>}
-                  {otherNotes.map((note) => (
-                    <div
-                      key={note.id}
-                      className={`notes-list-item ${activeNote?.id === note.id ? "active" : ""}`}
-                      onClick={() => selectNote(note)}
+          {/* ── Right Panel: Notion-like Editor ── */}
+          <div className="notes-editor-panel">
+            {activeNote ? (
+              <div className="editor-container">
+                {/* Tool bar & actions */}
+                <div className="editor-header">
+                  {/* Mode Toggles */}
+                  <div className="mode-toggle-group">
+                    <button
+                      className={`mode-btn ${viewMode === "edit" ? "active" : ""}`}
+                      onClick={() => setViewMode("edit")}
+                      title="Write only"
                     >
-                      <FileText size={14} className="note-item-icon" />
-                      <div className="note-item-meta">
-                        <span className="note-item-title">{note.title || "Untitled Document"}</span>
-                        <span className="note-item-date">
-                          {new Date(note.updated_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                      <Edit3 size={13} />
+                      <span>Write</span>
+                    </button>
+                    <button
+                      className={`mode-btn ${viewMode === "preview" ? "active" : ""}`}
+                      onClick={() => setViewMode("preview")}
+                      title="Preview only"
+                    >
+                      <Eye size={13} />
+                      <span>Preview</span>
+                    </button>
+                    <button
+                      className={`mode-btn ${viewMode === "split" ? "active" : ""}`}
+                      onClick={() => setViewMode("split")}
+                      title="Split side-by-side"
+                    >
+                      <Columns size={13} />
+                      <span>Split</span>
+                    </button>
+                  </div>
+
+                  <div className="editor-actions">
+                    <button
+                      className={`btn btn-ghost btn-sm btn-icon pin-action-btn ${isPinned ? "is-pinned" : ""}`}
+                      onClick={handleTogglePin}
+                      title={isPinned ? "Unpin document" : "Pin document"}
+                    >
+                      <Pin size={14} />
+                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={handleManualSave} title="Save immediately">
+                      <Save size={13} />
+                      <span>Save</span>
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-sm btn-icon hover-red"
+                      onClick={() => handleDeleteNote(activeNote.id)}
+                      title="Delete document"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
-              </>
+
+                {/* Title Section (always editable) */}
+                <div className="editor-title-container">
+                  <input
+                    type="text"
+                    className="editor-title-input"
+                    value={editTitle}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    placeholder="Untitled Document"
+                  />
+                </div>
+
+                {/* Body workspace depending on mode */}
+                <div className={`editor-body-wrapper mode-${viewMode}`}>
+                  {(viewMode === "edit" || viewMode === "split") && (
+                    <div className="editor-textarea-pane">
+                      <textarea
+                        ref={leftPaneRef}
+                        className="editor-textarea"
+                        value={editContent}
+                        onChange={(e) => handleContentChange(e.target.value)}
+                        placeholder="Start writing in markdown syntax here... (e.g. # Header, **bold**, - list)"
+                      />
+                    </div>
+                  )}
+
+                  {(viewMode === "preview" || viewMode === "split") && (
+                    <div className="editor-preview-pane markdown-body" ref={rightPaneRef}>
+                      <div
+                        dangerouslySetInnerHTML={renderMarkdown(editContent)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="no-active-note-box">
+                <Sparkles size={40} className="decor-icon text-accent animate-pulse" />
+                <h3>Welcome to your Creative Vault</h3>
+                <p>Select a document from the sidebar or create a new one to begin editing with markdown styling.</p>
+                <button className="btn btn-accent btn-sm mt-4" onClick={handleCreateNote}>
+                  <Plus size={14} /> Create a Document
+                </button>
+              </div>
             )}
           </div>
-        </div>
-
-        {/* ── Right Panel: Notion-like Editor ── */}
-        <div className="notes-editor-panel">
-          {activeNote ? (
-            <div className="editor-container">
-              {/* Tool bar & actions */}
-              <div className="editor-header">
-                {/* Mode Toggles */}
-                <div className="mode-toggle-group">
-                  <button
-                    className={`mode-btn ${viewMode === "edit" ? "active" : ""}`}
-                    onClick={() => setViewMode("edit")}
-                    title="Write only"
-                  >
-                    <Edit3 size={13} />
-                    <span>Write</span>
-                  </button>
-                  <button
-                    className={`mode-btn ${viewMode === "preview" ? "active" : ""}`}
-                    onClick={() => setViewMode("preview")}
-                    title="Preview only"
-                  >
-                    <Eye size={13} />
-                    <span>Preview</span>
-                  </button>
-                  <button
-                    className={`mode-btn ${viewMode === "split" ? "active" : ""}`}
-                    onClick={() => setViewMode("split")}
-                    title="Split side-by-side"
-                  >
-                    <Columns size={13} />
-                    <span>Split</span>
-                  </button>
-                </div>
-
-                <div className="editor-actions">
-                  <button
-                    className={`btn btn-ghost btn-sm btn-icon pin-action-btn ${isPinned ? "is-pinned" : ""}`}
-                    onClick={handleTogglePin}
-                    title={isPinned ? "Unpin document" : "Pin document"}
-                  >
-                    <Pin size={14} />
-                  </button>
-                  <button className="btn btn-ghost btn-sm" onClick={handleManualSave} title="Save immediately">
-                    <Save size={13} />
-                    <span>Save</span>
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-sm btn-icon hover-red"
-                    onClick={() => handleDeleteNote(activeNote.id)}
-                    title="Delete document"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Title Section (always editable) */}
-              <div className="editor-title-container">
-                <input
-                  type="text"
-                  className="editor-title-input"
-                  value={editTitle}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  placeholder="Untitled Document"
-                />
-              </div>
-
-              {/* Body workspace depending on mode */}
-              <div className={`editor-body-wrapper mode-${viewMode}`}>
-                {(viewMode === "edit" || viewMode === "split") && (
-                  <div className="editor-textarea-pane">
-                    <textarea
-                      ref={leftPaneRef}
-                      className="editor-textarea"
-                      value={editContent}
-                      onChange={(e) => handleContentChange(e.target.value)}
-                      placeholder="Start writing in markdown syntax here... (e.g. # Header, **bold**, - list)"
-                    />
-                  </div>
-                )}
-
-                {(viewMode === "preview" || viewMode === "split") && (
-                  <div className="editor-preview-pane markdown-body" ref={rightPaneRef}>
-                    <div
-                      dangerouslySetInnerHTML={renderMarkdown(editContent)}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="no-active-note-box">
-              <Sparkles size={40} className="decor-icon text-accent animate-pulse" />
-              <h3>Welcome to your Creative Vault</h3>
-              <p>Select a document from the sidebar or create a new one to begin editing with markdown styling.</p>
-              <button className="btn btn-accent btn-sm mt-4" onClick={handleCreateNote}>
-                <Plus size={14} /> Create a Document
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

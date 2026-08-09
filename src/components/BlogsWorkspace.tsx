@@ -329,15 +329,15 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
             : "";
 
   return (
-    <div className="notes-workspace-container blog-manager-workspace">
+    <div className="workspace-shell">
       <div className="workspace-header-row">
         {onBackToDashboard && (
           <button className="btn btn-ghost btn-sm back-btn" onClick={onBackToDashboard}>
             <ArrowLeft size={14} />
-            <span>Dashboard Launcher</span>
+            <span>Dashboard</span>
           </button>
         )}
-        <span className="workspace-badge">Blog Manager</span>
+        <span className="workspace-badge">Blogs</span>
         <a
           href="https://blog.arumugamg.com/"
           target="_blank"
@@ -359,6 +359,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
         </div>
       )}
 
+      <div className="notes-workspace-container workspace-panel blog-manager-workspace">
       <div className="notes-grid-layout">
         <div className="notes-sidebar">
           <div className="notes-search-wrapper">
@@ -420,6 +421,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
 
         {selectedBlog ? (
           <div className="notes-editor-panel">
+            <div className="editor-container">
             <div className="editor-header">
               <div className="mode-toggle-group" role="group" aria-label="Editor view mode">
                 <button
@@ -566,6 +568,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
                 </div>
               )}
             </div>
+            </div>
           </div>
         ) : (
           <div className="notes-editor-panel blog-empty-panel">
@@ -576,6 +579,7 @@ export const BlogsWorkspace: React.FC<BlogsWorkspaceProps> = ({ onBackToDashboar
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

@@ -34,14 +34,13 @@ export const McpWorkspace: React.FC<McpWorkspaceProps> = ({ onBackToDashboard })
   }, []);
 
   return (
-    <div className="mcp-workspace-container">
-      {/* Back to Launcher Breadcrumb */}
+    <div className="workspace-shell mcp-workspace-container">
       <div className="workspace-header-row">
         <button className="btn btn-ghost btn-sm back-btn" onClick={onBackToDashboard}>
           <ArrowLeft size={14} />
-          <span>Dashboard Launcher</span>
+          <span>Dashboard</span>
         </button>
-        <span className="workspace-badge">MCP Server Hub</span>
+        <span className="workspace-badge">MCP</span>
       </div>
 
       <div className="mcp-grid-layout">
